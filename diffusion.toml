@@ -59,4 +59,4 @@
     Name = "default.konstruktoid.docker_rootless"
     Src = "https://github.com/konstruktoid/ansible-role-docker-rootless.git"
     Scm = "git"
-    Version = ">=1.12.0"
+    Version = "<1.12.0"
