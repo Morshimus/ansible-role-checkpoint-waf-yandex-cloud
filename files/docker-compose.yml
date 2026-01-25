@@ -1,0 +1,125 @@
+####Volumes Options#####
+
+volumes:
+  cp_waf_agent_certs:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: ${PATH_CP_AGENT_WAF_CERTS:-./Certs}
+  cp_waf_agent_conf:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: ${PATH_CP_AGENT_WAF_CONFIGURATION:-./AgentConfiguration}
+  cp_waf_nginx_conf:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: ${PATH_CP_NGINX_CONFIGURATION:-./NginxConfiguration}
+  cp_waf_agent_data:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: ${PATH_CP_AGENT_WAF_DATA:-./Data}
+  cp_waf_agent_logs:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: ${PATH_CP_AGENT_WAF_LOGS:-./Logs}
+
+####Network Options#####
+
+networks:
+  frontend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.89.21.0/28
+          gateway: 10.89.21.1
+
+####Logging Options####
+
+x-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "100m"
+    max-file: "1"
+
+####Image Options####
+
+x-cp-waf-agent-image: &cp_waf_agent_IMG "${CP_WAF_AGENT_IMG:-docker.io/checkpoint/cloudguard-appsec-standalone:1185074}"
+
+####Environment Options#####
+
+x-env-cp-waf-agent: &cp_waf_agent_ENV
+  CP_WAF_AGENT_TOKEN: "/run/secrets/cp_waf_agent_authorization_token"
+
+####Secrets Options#####
+
+secrets:
+  cp_waf_agent_authorization_token:
+    file: secrets/.CP_WAF_AGENT_TOKEN
+####Resource Options#####
+
+x-cp-waf-agent-resources: &resources_common_cp_waf_agent
+  limits:
+    cpus: ${DOCKER_MAIN_CP_WAF_AGENT_CPU:-2.6}
+    memory: ${DOCKER_MAIN_CP_WAF_AGENT_MEM:-1GB}
+
+####Healthchecks Options####
+
+x-cp-waf-agent-healthcheck: &cp_waf_agent_healthcheck
+  test:
+    [
+      "CMD",
+      "/bin/sh",
+      "-c",
+      "cpnano -s | grep 'Registration status: Succeeded' ",
+    ]
+  interval: 30s
+  timeout: 30s
+  start_period: 60s
+  retries: 5
+
+####Services Options#####
+
+services:
+  cp_waf_agent:
+    image: *cp_waf_agent_IMG
+    container_name: cp_waf_agent
+    ports:
+      - "8443:443"
+      - "8080:80"
+      - "8117:8117"
+    deploy:
+      resources: *resources_common_cp_waf_agent
+    environment: *cp_waf_agent_ENV
+    command: /bin/bash -c "/registration_cmd.sh"
+    restart: unless-stopped
+    healthcheck: *cp_waf_agent_healthcheck
+    secrets:
+      - cp_waf_agent_authorization_token
+    networks:
+      - frontend
+    volumes:
+      - ./registration_cmd.sh:/registration_cmd.sh
+      - /etc/ssl/certs:/etc/ssl/certs
+      - /var/log/nginx:/var/log/nginx:rw
+      - cp_waf_agent_logs:/var/log/nano_agent
+      - cp_waf_agent_data:/etc/cp/data
+      - cp_waf_agent_conf:/etc/cp/conf
+      - cp_waf_nginx_conf:/etc/nginx/conf.d
+      - cp_waf_agent_certs:/appsec/etc/certs
+    logging: *logging
+    labels:
+      org.label-schema.group: "security"
+      org.manufacturer: "Checkpoint"
+      org.product: "CloudGuard-Appsec-Standalone"

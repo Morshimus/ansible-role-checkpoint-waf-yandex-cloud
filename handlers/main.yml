@@ -1,0 +1,12 @@
+---
+- name: Reload systemd configuration
+  listen: daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart Checkpoint WAF Agent Docker Compose service
+  listen: restart-cp-waf-agent-docker
+  ansible.builtin.service:
+    name: checkpoint_waf_agent_docker
+    enabled: true
+    state: restarted

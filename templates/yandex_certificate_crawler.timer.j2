@@ -1,0 +1,14 @@
+[Unit]
+Description="Timer for Update yandex certificate crawler service"
+
+
+[Timer]
+Unit=yandex_certificate_crawler.service
+OnBootSec=5min
+OnCalendar={{ yandex_certificate_crawler_schedule | default("*-*-* 19:00:00") }}
+Persistent=True
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
+

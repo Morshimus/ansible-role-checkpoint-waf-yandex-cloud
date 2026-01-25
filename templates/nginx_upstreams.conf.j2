@@ -1,0 +1,80 @@
+real_ip_header X-Forwarded-For;
+set_real_ip_from 10.89.21.1/32;
+real_ip_recursive on;
+underscores_in_headers on;
+
+{% if nginx_servers is defined and nginx_servers | length > 0 %}
+{% for server in nginx_servers %}
+server {
+  listen 443 ssl;
+  server_name {{ server.server_name }};
+
+  {% if server.limits is defined and server.limits | length > 0 %}
+  {% for limit in server.limits %}
+  {% if limit.type == 'req' %}
+
+  limit_req zone={{ limit.zone }} burst={{ limit.burst }} nodelay;
+
+  {% elif  limit.type == 'conn' %}
+
+  limit_conn {{ limit.zone }} {{ limit.requests }};
+
+  {% else %}
+# Warning! No known limits were defined. Use req and conn.
+  {% endif %}
+  {% endfor %}
+  {% endif %}
+
+  client_body_timeout {{ server.client_body_timeout }};
+  client_header_timeout {{ server.client_header_timeout }};
+
+  ssl_stapling {{ server.ssl_stapling }};
+  ssl_stapling_verify {{ server.ssl_stapling_verify }};
+  ssl_session_tickets {{ server.ssl_session_tickets }};
+  ssl_session_timeout {{ server.ssl_session_timeout }};
+
+  ssl_protocols {% for protocol in server.ssl_protocols %}{{ protocol }}{% if not loop.last %} {% else %};{% endif %}{% endfor %}
+
+  ssl_ciphers '{% for cipher in server.ssl_ciphers %}{{ cipher }}{% if not loop.last %}:{% else %}{% endif %}{% endfor %}';
+  ssl_prefer_server_ciphers {{ server.ssl_prefer_server_ciphers }};
+  ssl_certificate     /appsec/etc/certs/{{ server.certificate_name }}-crt.pem;
+  ssl_certificate_key /appsec/etc/certs/{{ server.certificate_name }}-key.pem;
+  access_log  /var/log/nginx/{{ server.server_name }}.access.log  main;
+  add_header Strict-Transport-Security max-age=31536000;
+
+{% for location in server.locations %}
+  location {{ location.path }} {
+{% if location.cors_headers is defined and location.cors_headers is true %}
+    add_header Access-Control-Allow-Origin https://{{ location.api_host }};
+    add header Access-Control-Allow-Headers content-type;
+{% endif %}
+    proxy_pass {{ location.proxy_pass }};
+{% if location.proxy_header_strategy is defined and location.proxy_header_strategy == "purge" %}
+    proxy_cache_bypass  $http_upgrade;
+    proxy_set_header Upgrade  $http_upgrade;
+    proxy_set_header Connection "upgrade";
+{% elif location.proxy_header_strategy is defined and location.proxy_header_strategy == "keep-alive" %}
+    proxy_set_header Connection "keep-alive";
+{% else %}
+{% endif %}
+    proxy_set_header Host {{ location.proxy_host }};
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_http_version 1.1;
+{% if location.ssl_forward is defined and location.ssl_forward is true %}
+    proxy_ssl_name {{ location.proxy_host }};
+    proxy_ssl_server_name on;
+{% endif %}
+    proxy_connect_timeout       {{ location.proxy_connect_timeout | default('60s') }};
+    proxy_send_timeout          {{ location.proxy_send_timeout | default('60s') }};
+    proxy_read_timeout          {{ location.proxy_read_timeout | default('60s')}};
+    proxy_pass_request_headers  {{ location.proxy_pass_request_headers | default('on') }};
+  }
+{% endfor %}
+}
+{% endfor %}
+{% else %}
+# No nginx_servers defined, skipping server blocks.
+{% endif %}
+

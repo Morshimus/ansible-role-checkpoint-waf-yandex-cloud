@@ -1,0 +1,140 @@
+# ---
+#  vars file for checkpoint_waf_agent
+#  Example:
+# cp_waf_agent_authorization_token: token - place to secrets
+#
+# nginx_limits:
+#   - conn:
+#       zone: "app_conn:5m"
+#   - req:
+#       zone: "app_req:5m"
+#       rate: "30r/s"
+#
+# app_key: |
+#   key_from_vault - place to secrets
+# app_pem: |
+#    certificate_from_vault - place to secrets
+# nginx_certs:
+#   - ["app-key.pem", "{{ app_key }}"]
+#   - ["app-crt.pem", "{{ app_pem }}"]
+#
+# yc_certificates_ids:
+#   - "xxxx"
+#   - "xxxx"
+#
+# nginx_servers:
+#   - server_name: "pgadmin-migration.app.linru.ru"
+#     limits:
+#       - type: "req"
+#         zone: "pgadmin_req"
+#         burst: "20"
+#       - type: "conn"
+#         zone: "pgadmin_conn"
+#         requests: "10000"
+#     client_body_timeout: "30s"
+#     client_header_timeout: "30s"
+#     ssl: "on"
+#     ssl_stapling: "on"
+#     ssl_stapling_verify: "on"
+#     ssl_session_tickets: "off"
+#     ssl_session_timeout: "6h"
+#     ssl_protocols:
+#       - "TLSv1.1"
+#       - "TLSv1.2"
+#       - "TLSv1.3"
+#     ssl_ciphers:
+#       - "ECDHE-ECDSA-CHACHA20-POLY1305"
+#       - "ECDHE-RSA-CHACHA20-POLY1305"
+#       - "ECDHE-ECDSA-AES128-GCM-SHA256"
+#       - "ECDHE-RSA-AES128-GCM-SHA256"
+#       - "ECDHE-ECDSA-AES256-GCM-SHA384"
+#       - "ECDHE-RSA-AES256-GCM-SHA384"
+#       - "DHE-RSA-AES128-GCM-SHA256"
+#       - "DHE-RSA-AES256-GCM-SHA384"
+#       - "ECDHE-ECDSA-AES128-SHA256"
+#       - "ECDHE-RSA-AES128-SHA256"
+#       - "ECDHE-ECDSA-AES128-SHA"
+#       - "ECDHE-RSA-AES256-SHA384"
+#       - "ECDHE-RSA-AES128-SHA"
+#       - "ECDHE-ECDSA-AES256-SHA384"
+#       - "ECDHE-ECDSA-AES256-SHA"
+#       - "ECDHE-RSA-AES256-SHA"
+#       - "DHE-RSA-AES128-SHA256"
+#       - "DHE-RSA-AES128-SHA"
+#       - "DHE-RSA-AES256-SHA256"
+#       - "DHE-RSA-AES256-SHA"
+#       - "ECDHE-ECDSA-DES-CBC3-SHA"
+#       - "ECDHE-RSA-DES-CBC3-SHA"
+#       - "EDH-RSA-DES-CBC3-SHA"
+#       - "AES128-GCM-SHA256"
+#       - "AES256-GCM-SHA384"
+#       - "AES128-SHA256"
+#       - "AES256-SHA256"
+#       - "AES128-SHA"
+#       - "AES256-SHA"
+#       - "DES-CBC3-SHA"
+#       - "!DSS"
+#     ssl_prefer_server_ciphers: "on"
+#     certificate_name: "app_linru"
+#     locations:
+#       - path: "/"
+#         proxy_pass: "http://10.10.10.10"
+#         proxy_host: "example.com"
+#   - server_name: "pgadmin-migration2.app.linru.ru"
+#     limits:
+#       - type: "req"
+#         zone: "pgadmin_req"
+#         burst: "20"
+#       - type: "conn"
+#         zone: "pgadmin_conn"
+#         requests: "10000"
+#     client_body_timeout: "30s"
+#     client_header_timeout: "30s"
+#     ssl: "on"
+#     ssl_stapling: "on"
+#     ssl_stapling_verify: "on"
+#     ssl_session_tickets: "off"
+#     ssl_session_timeout: "6h"
+#     ssl_protocols:
+#       - "TLSv1.1"
+#       - "TLSv1.2"
+#       - "TLSv1.3"
+#     ssl_ciphers:
+#       - "ECDHE-ECDSA-CHACHA20-POLY1305"
+#       - "ECDHE-RSA-CHACHA20-POLY1305"
+#       - "ECDHE-ECDSA-AES128-GCM-SHA256"
+#       - "ECDHE-RSA-AES128-GCM-SHA256"
+#       - "ECDHE-ECDSA-AES256-GCM-SHA384"
+#       - "ECDHE-RSA-AES256-GCM-SHA384"
+#       - "DHE-RSA-AES128-GCM-SHA256"
+#       - "DHE-RSA-AES256-GCM-SHA384"
+#       - "ECDHE-ECDSA-AES128-SHA256"
+#       - "ECDHE-RSA-AES128-SHA256"
+#       - "ECDHE-ECDSA-AES128-SHA"
+#       - "ECDHE-RSA-AES256-SHA384"
+#       - "ECDHE-RSA-AES128-SHA"
+#       - "ECDHE-ECDSA-AES256-SHA384"
+#       - "ECDHE-ECDSA-AES256-SHA"
+#       - "ECDHE-RSA-AES256-SHA"
+#       - "DHE-RSA-AES128-SHA256"
+#       - "DHE-RSA-AES128-SHA"
+#       - "DHE-RSA-AES256-SHA256"
+#       - "DHE-RSA-AES256-SHA"
+#       - "ECDHE-ECDSA-DES-CBC3-SHA"
+#       - "ECDHE-RSA-DES-CBC3-SHA"
+#       - "EDH-RSA-DES-CBC3-SHA"
+#       - "AES128-GCM-SHA256"
+#       - "AES256-GCM-SHA384"
+#       - "AES128-SHA256"
+#       - "AES256-SHA256"
+#       - "AES128-SHA"
+#       - "AES256-SHA"
+#       - "DES-CBC3-SHA"
+#       - "!DSS"
+#     ssl_prefer_server_ciphers: "on"
+#     certificate_name: "app"
+#     locations:
+#       - path: "/"
+#         proxy_pass: "http://10.10.10.10"
+#         proxy_host: "example.com"
+#

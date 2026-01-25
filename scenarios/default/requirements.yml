@@ -1,0 +1,10 @@
+collections:
+    - name: community.general
+      version: 12.2.0
+    - name: community.docker
+      version: 5.0.4
+roles:
+    - name: konstruktoid.docker_rootless
+      src: https://github.com/konstruktoid/ansible-role-docker-rootless.git
+      version: v1.11.0
+      scm: git

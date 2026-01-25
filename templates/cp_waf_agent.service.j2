@@ -1,0 +1,24 @@
+
+[Unit]
+Description=Chekpoint WAF agent linru service with docker-compose
+StartLimitBurst=10
+StartLimitIntervalSec=90
+
+[Service]
+Delegate=cpu cpuset io memory pids
+Environment="XDG_RUNTIME_DIR=/run/user/{{ docker_user_info.uid }}"
+Environment="DOCKER_HOST=unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
+Environment="PATH=/home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH"
+Restart=always
+User={{ docker_user }}
+Group={{ docker_user }}
+WorkingDirectory={{ path_backend_config }}
+
+# Compose up
+ExecStart=/home/{{ docker_user }}/bin/docker-compose  up --remove-orphans --force-recreate
+
+# Compose down, remove containers
+ExecStop=/home/{{ docker_user }}/bin/docker-compose  down --volumes
+
+[Install]
+WantedBy=multi-user.target

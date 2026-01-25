@@ -1,0 +1,16 @@
+---
+docker_add_alias: true
+docker_rootful: false
+docker_rootful_enabled: false
+docker_rootful_opts: >
+  --live-restore --icc=false --default-ulimit nproc=512:1024
+  --default-ulimit nofile=100:200 -H fd://
+docker_user: docker-adm
+docker_user_bashrc: false
+docker_allow_privileged_ports: false
+docker_allow_ping: false
+docker_compose: true
+docker_service_restart: false
+docker_daemon_json_template: daemon_no_snapshotter.json.j2
+path_docker: /opt/Docker/root
+path_docker_root: /opt/Docker/root/lib

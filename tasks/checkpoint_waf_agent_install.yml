@@ -1,0 +1,357 @@
+---
+- name: Include all  in defaults and all nested directories
+  ansible.builtin.include_vars:
+    dir: "{{ inventory_dir }}/roles/cp_waf_agent/defaults"
+    ignore_files:
+      - ".terragrunt-source-manifest"
+  when: molecule_yml is not defined
+
+- name: Include all  in vars and all nested directories
+  ansible.builtin.include_vars:
+    dir: "{{ inventory_dir }}/vars"
+    ignore_files:
+      - ".terragrunt-source-manifest"
+  when: molecule_yml is not defined
+
+- name: Include all  in vars and all nested directories MOLECULE
+  ansible.builtin.include_vars:
+    dir: "{{ playbook_dir }}/../../defaults"
+  when: molecule_yml is defined
+
+- name: Include all  in vars and all nested directories MOLECULE
+  ansible.builtin.include_vars:
+    dir: "{{ playbook_dir }}/../../vars"
+    ignore_files:
+      - ".terragrunt-source-manifest"
+  when: molecule_yml is defined
+
+- name: Install jq for yandex crawler service
+  ansible.builtin.apt:
+    pkg:
+      - jq
+    state: present
+    update_cache: true
+  when: >
+    (ansible_distribution == 'Ubuntu' or
+    ansible_distribution == 'Debian') and
+    molecule_yml is defined
+
+- name: Check that the Checkpoint WAF Agent Docker Compose service file exist
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/checkpoint_waf_agent.service"
+  register: checkpoint_waf_agent_docker_service_result
+
+- name: Check Checkpoint WAF Agent Config folder
+  ansible.builtin.stat:
+    path: "{{ path_cp_agent_waf_configuration }}"
+  register: checkpoint_waf_agent_config_root
+
+- name: Check Checkpoint WAF Nginx Config folder
+  ansible.builtin.stat:
+    path: "{{ path_cp_nginx_configuration }}"
+  register: checkpoint_nginx_config_root
+
+- name: Check Checkpoint WAF Agent Operational Data folder
+  ansible.builtin.stat:
+    path: "{{ path_cp_agent_waf_data }}"
+  register: cp_agent_waf_data
+
+- name: Check  Checkpoint WAF Agent certificate folder
+  ansible.builtin.stat:
+    path: "{{ path_cp_agent_waf_certs }}"
+  register: cp_agent_waf_certs
+
+- name: Check  Checkpoint WAF Agent logs folder
+  ansible.builtin.stat:
+    path: "{{ path_cp_agent_waf_logs }}"
+  register: cp_agent_waf_logs
+
+- name: Check Nginx var logs folder
+  ansible.builtin.stat:
+    path: "/var/log/nginx"
+  register: nginx_logs
+
+- name: Configure Checkpoint WAF Agent Configuration Folders
+  block:
+    - name: Create Checkpoint WAF Agent Config Root folder
+      ansible.builtin.file:
+        path: "{{ path_backend_config | trim }}"
+        state: directory
+        mode: "0755"
+        owner: "{{ docker_user }}"
+        group: "{{ docker_user }}"
+      when: not checkpoint_waf_agent_config_root.stat.exists
+
+    - name: Create Checkpoint WAF Agent Configuration subfolder
+      ansible.builtin.file:
+        path: "{{ path_cp_agent_waf_configuration | trim }}"
+        state: directory
+        mode: "0755"
+        owner: "{{ docker_user }}"
+        group: "{{ docker_user }}"
+      when: not checkpoint_waf_agent_config_root.stat.exists
+
+    - name: Create Checkpoint Nginx Configuration subfolder
+      ansible.builtin.file:
+        path: "{{ path_cp_nginx_configuration | trim }}"
+        state: directory
+        mode: "0755"
+        owner: "{{ docker_user }}"
+        group: "{{ docker_user }}"
+      when: not checkpoint_nginx_config_root.stat.exists
+
+    - name: Create Checkpoint Nginx Logs folder at host
+      ansible.builtin.file:
+        path: "/var/log/nginx"
+        state: directory
+        mode: "0755"
+        owner: "{{ docker_user }}"
+        group: "{{ docker_user }}"
+      when: not nginx_logs.stat.exists
+      notify: restart-cp-waf-agent-docker
+
+    - name: Create Checkpoint WAF Agent Secrets subfolder
+      ansible.builtin.file:
+        path: "{{ path_backend_config }}/secrets"
+        state: directory
+        mode: "754"
+        owner: "{{ docker_user }}"
+        group: "{{ docker_user }}"
+      when: not checkpoint_waf_agent_config_root.stat.exists
+
+    - name: Create Checkpoint WAF Agent Operational data subfolder
+      ansible.builtin.file:
+        path: "{{ path_cp_agent_waf_data | trim }}"
+        state: directory
+        mode: "0755"
+        owner: "{{ docker_user }}"
+        group: "{{ docker_user }}"
+      when: not cp_agent_waf_data.stat.exists
+
+    - name: Create Checkpoint WAF Agent Certificates subfolder
+      ansible.builtin.file:
+        path: "{{ path_cp_agent_waf_certs | trim }}"
+        state: directory
+        mode: "0755"
+        owner: "{{ docker_user }}"
+        group: "{{ docker_user }}"
+      when: not cp_agent_waf_certs.stat.exists
+
+    - name: Create  Checkpoint WAF Agent Logs subfolder
+      ansible.builtin.file:
+        path: "{{ path_cp_agent_waf_logs | trim }}"
+        state: directory
+        mode: "0755"
+        owner: "{{ docker_user }}"
+        group: "{{ docker_user }}"
+      when: not cp_agent_waf_logs.stat.exists
+
+- name: Create secrets CP_WAF_AGENT_TOKEN file
+  become_user: "{{ docker_user }}"
+  ansible.builtin.template:
+    src: .CP_WAF_AGENT_TOKEN.j2
+    dest: "{{ path_backend_config }}/secrets/.CP_WAF_AGENT_TOKEN"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: "0754"
+  notify: restart-cp-waf-agent-docker
+
+- name: Get Yandex Cloud token
+  ansible.builtin.shell: |
+    set -o pipefail && \
+    /bin/curl  -s \
+    {{ iam_link }} \
+    -H 'Metadata-Flavor: Google' | /bin/jq -r .access_token
+  args:
+    executable: /bin/bash
+  register: yc_token_command_result
+  changed_when: false
+  when: >
+    molecule_yml is not defined and
+    use_yandex_container_registry
+
+- name: Set fact of yc_token
+  ansible.builtin.set_fact:
+    yandex_cloud_token: "{{ yc_token_command_result.stdout }}"
+  when: >
+    molecule_yml is not defined and
+    use_yandex_container_registry
+
+- name: Set fact of yc_token MOLECULE
+  ansible.builtin.set_fact:
+    yandex_cloud_token: "{{ yandex_cloud_token_static }}"
+  when: molecule_yml is defined
+
+- name: Check Docker user
+  become: true
+  ansible.builtin.user:
+    name: "{{ docker_user }}"
+    state: present
+    shell: /bin/bash
+  register: docker_user_info
+
+- name: Log into Registry
+  become: true
+  become_user: "{{ docker_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
+    DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
+    PATH: >
+      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
+  community.docker.docker_login:
+    registry_url: "{{ docker_registry_url }}"
+    username: iam
+    password: "{{ yandex_cloud_token }}"
+  when: use_yandex_container_registry
+
+- name: Check Checkpoint WAF Agent .env file exists
+  ansible.builtin.stat:
+    path: "{{ path_backend_config }}/.env"
+  register: env_file
+
+- name: Create .env file
+  become_user: "{{ docker_user }}"
+  ansible.builtin.template:
+    src: Env.j2
+    dest: "{{ path_backend_config }}/.env"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: "0600"
+  notify: restart-cp-waf-agent-docker
+
+- name: Create nginx upstream configuration file
+  become_user: "{{ docker_user }}"
+  ansible.builtin.template:
+    src: nginx_upstreams.conf.j2
+    dest: "{{ path_cp_nginx_configuration }}/upstreams.conf"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: "0777"
+  notify: restart-cp-waf-agent-docker
+
+- name: Create nginx limit configuration file
+  become_user: "{{ docker_user }}"
+  ansible.builtin.template:
+    src: nginx_limits.conf.j2
+    dest: "{{ path_cp_nginx_configuration }}/limits.conf"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: "0777"
+  notify: restart-cp-waf-agent-docker
+
+- name: Nginx certificates copy.
+  become_user: "{{ docker_user }}"
+  ansible.builtin.copy:
+    backup: true
+    dest: "{{ path_cp_agent_waf_certs }}/{{ item[0] }}"
+    content: "{{ item[1] }}"
+    mode: "0777"
+    owner: "{{ docker_user }}"
+  loop: "{{ nginx_certs }}"
+  when: >
+    nginx_certs is defined
+  notify: restart-cp-waf-agent-docker
+
+- name: Check if folder for yandex crawler exist
+  ansible.builtin.stat:
+    path: "{{ path_backend_config }}/yc_cert_crawler"
+  register: yc_cert_crawler
+
+- name: Create Yandex Crawler Folder
+  ansible.builtin.file:
+    path: "{{ path_backend_config }}/yc_cert_crawler"
+    state: directory
+    mode: "0755"
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+  when: not yc_cert_crawler.stat.exists
+
+- name: Yandex Crawler script files
+  ansible.builtin.set_fact:
+    yandex_crawler_script_files:
+      - "run.sh"
+      - "yandex_certificate_crawler.sh"
+
+- name: Copy Yandex Crawler scripts
+  become_user: "{{ docker_user }}"
+  ansible.builtin.copy:
+    backup: true
+    src: "yandex_certificate_crawler/{{ item }}"
+    dest: "{{ path_backend_config }}/yc_cert_crawler/{{ item }}"
+    mode: "0777"
+    owner: "{{ docker_user }}"
+  loop: "{{ yandex_crawler_script_files }}"
+
+- name: Install systemd timer for yandex certificate crawler
+  ansible.builtin.template:
+    src: yandex_certificate_crawler.timer.j2
+    dest: /etc/systemd/system/yandex_certificate_crawler.timer
+    backup: true
+    mode: "0600"
+  register: yandex_certificate_crawler_timer
+
+- name: Install systemd service for yandex certificate crawler
+  ansible.builtin.template:
+    src: yandex_certificate_crawler.service.j2
+    dest: /etc/systemd/system/yandex_certificate_crawler.service
+    backup: true
+    mode: "0600"
+  register: yandex_certificate_crawler_service
+
+- name: Reload systemd configuration
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: >
+    yandex_certificate_crawler_service.changed or
+    yandex_certificate_crawler_timer.changed
+
+- name: Init start yandex crawler service
+  ansible.builtin.systemd:
+    name: yandex_certificate_crawler
+    state: started
+  changed_when: false
+
+- name: Copy docker-compose file
+  become_user: "{{ docker_user }}"
+  ansible.builtin.copy:
+    src: docker-compose.yml
+    dest: "{{ path_backend_config }}/docker-compose.yml"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: "0777"
+  notify: restart-cp-waf-agent-docker
+
+- name: Copy registration_cmd.sh file
+  become_user: "{{ docker_user }}"
+  ansible.builtin.copy:
+    src: registration_cmd.sh
+    dest: "{{ path_backend_config }}/registration_cmd.sh"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: a+x
+  notify: restart-cp-waf-agent-docker
+
+- name: Docker compose pull images
+  become: true
+  become_user: "{{ docker_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
+    DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
+    PATH: >
+      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ path_backend_config }}"
+
+- name: Create systemd service for docker-compose
+  ansible.builtin.template:
+    src: cp_waf_agent.service.j2
+    dest: /etc/systemd/system/checkpoint_waf_agent_docker.service
+    backup: true
+    mode: "0600"
+  notify: daemon-reload

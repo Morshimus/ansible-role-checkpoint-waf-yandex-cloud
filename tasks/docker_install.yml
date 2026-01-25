@@ -1,0 +1,120 @@
+---
+- name: Include all  in defaults and all nested directories
+  ansible.builtin.include_vars:
+    dir: "{{ inventory_dir }}/roles/cp_waf_agent/defaults"
+    ignore_files:
+      - ".terragrunt-source-manifest"
+  when: molecule_yml is not defined
+
+- name: Include all  in vars and all nested directories
+  ansible.builtin.include_vars:
+    dir: "{{ inventory_dir }}/vars"
+    ignore_files:
+      - ".terragrunt-source-manifest"
+  when: molecule_yml is not defined
+
+- name: Include all  in vars and all nested directories MOLECULE
+  ansible.builtin.include_vars:
+    dir: "{{ playbook_dir }}/../../vars"
+  when: molecule_yml is defined
+
+- name: Include all  in defaults and all nested directories MOLECULE
+  ansible.builtin.include_vars:
+    dir: "{{ playbook_dir }}/../../defaults"
+  when: molecule_yml is defined
+
+- name: Install iptables and sudo MOLECULE
+  ansible.builtin.apt:
+    pkg:
+      - iptables
+      - sudo
+    state: present
+    update_cache: true
+  when: >
+    (ansible_distribution == 'Ubuntu' or
+    ansible_distribution == 'Debian') and
+    molecule_yml is defined
+
+- name: Add Docker user
+  become: true
+  ansible.builtin.user:
+    name: "{{ docker_user }}"
+    state: present
+    shell: /bin/bash
+  register: docker_user_info
+  tags:
+    - user
+
+- name: Create directory for Docker
+  ansible.builtin.file:
+    path: "{{ path_docker }}"
+    state: directory
+    mode: "0777"
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+
+- name: Install Docker Rootless
+  ansible.builtin.include_role:
+    name: konstruktoid.docker_rootless
+  when: molecule_yml is not defined
+
+- name: Install Docker Rootless MOLECULE
+  when: molecule_yml is defined
+  block:
+    - name: Check if current ip tables is legacy
+      ansible.builtin.shell: |
+        set -o pipefail && \
+        update-alternatives --get-selections \
+        | grep iptables
+      register: iptables_mode
+      args:
+        executable: /bin/bash
+      changed_when:
+        - "'/usr/sbin/iptables-legacy' not in iptables_mode.stdout"
+      when: >
+        ansible_facts['distribution'] == 'Ubuntu' or
+        ansible_facts['distribution'] == 'Debian'
+
+    - name: Set-up Iptables to legacy mode.
+      ansible.builtin.shell: |
+        update-alternatives --set iptables /usr/sbin/iptables-legacy
+      args:
+        executable: /bin/sh
+      changed_when:
+        - "'/usr/sbin/iptables-legacy' not in iptables_mode.stdout"
+
+    - name: Install Rootless role.
+      ansible.builtin.include_role:
+        name: konstruktoid.docker_rootless
+
+    - name: Install Docker Compose
+      ansible.builtin.apt:
+        pkg:
+          - docker-compose
+        state: present
+      when: >
+        ansible_distribution == 'Ubuntu' or
+        ansible_distribution == 'Debian'
+
+- name: Check if lingering is already enabled for the user MOLECULE
+  ansible.builtin.stat:
+    path: "/var/lib/systemd/linger/{{ docker_user }}"
+  register: user_lingering_status
+  when: molecule_yml is defined
+
+- name: Enable lingering for {{ docker_user }} user if not already set MOLECULE
+  ansible.builtin.command: "loginctl enable-linger {{ docker_user }}"
+  when: not user_lingering_status.stat.exists
+  register: enable_linger_command
+  changed_when: enable_linger_command.rc == 0
+
+- name: Start and Enable Docker Service
+  become: true
+  become_user: "{{ docker_user }}"
+  ansible.builtin.systemd_service:
+    name: docker.service
+    enabled: true
+    state: started
+    scope: user
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"

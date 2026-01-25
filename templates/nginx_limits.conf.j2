@@ -1,0 +1,19 @@
+map $http_x_forwarded_for $real_client_ip {
+     default $remote_addr;
+     ~^(?P<first_ip>[0-9\.]+) $first_ip;
+}
+{% if nginx_limits is defined and nginx_limits | length > 0 %}
+{% for limit in nginx_limits %}
+{% if limit.conn is defined and limit.conn | length > 0 %}
+limit_conn_zone $real_client_ip zone={{ limit.conn.zone }};
+{% elif limit.req is defined and limit.req | length > 0 %}
+limit_req_zone $real_client_ip zone={{ limit.req.zone }} rate={{ limit.req.rate }};
+{% else %}
+# Warning! Not known type mentioned. Use req and conn.
+{% endif %}
+{% endfor %}
+{% else %}
+# No nginx_limits defined, skipping limits blocks.
+{% endif %}
+limit_conn_status 429;
+limit_req_status 429;
