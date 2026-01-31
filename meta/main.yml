@@ -1,16 +1,16 @@
 galaxy_info:
-    role_name: checkpoint_waf_agent
-    company: Polar Team
-    namespace: polar
-    author: Daniel Dalavurak
-    description: Role for installing and register checkpoint waf solution.
-    license: MIT
-    min_ansible_version: "2.1"
-    platforms:
-        - name: Ubuntu
-          versions:
-            - nobile
-    galaxy_tags: []
+  role_name: checkpoint_waf_agent
+  company: Polar Team
+  namespace: polar
+  author: Daniel Dalavurak
+  description: Role for installing and register checkpoint waf solution.
+  license: MIT
+  min_ansible_version: "2.1"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+  galaxy_tags: []
 collections:
-    - community.general
-    - community.docker
+  - community.general
+  - community.docker
