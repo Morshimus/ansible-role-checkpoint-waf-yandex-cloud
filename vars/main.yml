@@ -23,7 +23,7 @@
 #   - "xxxx"
 #
 # nginx_servers:
-#   - server_name: "pgadmin-migration.app.linru.ru"
+#   - server_name: "example.com"
 #     limits:
 #       - type: "req"
 #         zone: "pgadmin_req"
@@ -75,12 +75,12 @@
 #       - "DES-CBC3-SHA"
 #       - "!DSS"
 #     ssl_prefer_server_ciphers: "on"
-#     certificate_name: "app_linru"
+#     certificate_name: "app"
 #     locations:
 #       - path: "/"
 #         proxy_pass: "http://10.10.10.10"
 #         proxy_host: "example.com"
-#   - server_name: "pgadmin-migration2.app.linru.ru"
+#   - server_name: "example2.com"
 #     limits:
 #       - type: "req"
 #         zone: "pgadmin_req"
