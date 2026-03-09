@@ -55,7 +55,7 @@
 
 - name: Install Docker Rootless
   ansible.builtin.include_role:
-    name: konstruktoid.docker_rootless
+    name: docker_rootless
   when: molecule_yml is not defined
 
 - name: Install Docker Rootless MOLECULE
@@ -85,7 +85,7 @@
 
     - name: Install Rootless role.
       ansible.builtin.include_role:
-        name: konstruktoid.docker_rootless
+        name: docker_rootless
 
     - name: Install Docker Compose
       ansible.builtin.apt:
@@ -102,7 +102,7 @@
   register: user_lingering_status
   when: molecule_yml is defined
 
-- name: Enable lingering for {{ docker_user }} user if not already set MOLECULE
+- name: Enable lingering for  MOLECULE if not exist user {{ docker_user }}
   ansible.builtin.command: "loginctl enable-linger {{ docker_user }}"
   when: not user_lingering_status.stat.exists
   register: enable_linger_command

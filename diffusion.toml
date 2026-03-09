@@ -26,7 +26,12 @@
       forbid-implicit-octal = true
 
 [ansible_lint]
-  exclude_paths = ["molecule/default/tests/*.yml", "molecule/default/tests/*/*/*.yml", "tests/test.yml"]
+  exclude_paths = [
+  "molecule/default/verify.yml",
+  "molecule/default/tests/*.yml",
+  "molecule/default/tests/*/*/*.yml",
+  "tests/test.yml"
+  ]
   warn_list = ["meta-no-info", "yaml[line-length]"]
   skip_list = ["meta-incorrect", "role-name[path]"]
 
@@ -36,6 +41,8 @@
 [cache]
   enabled = true
   cache_id = "53a5ba6854e8c0eb"
+  docker_cache = true
+  uv_cache = true
 
 [dependencies]
   ansible = ">=13.0.0"
@@ -48,15 +55,18 @@
     Pinned = "3.13"
 
   [[dependencies.collections]]
-    Name = "community.general"
+    Name = "default.general"
+    Namespace = "community"
     Version = ">=12.2.0"
 
   [[dependencies.collections]]
-    Name = "community.docker"
-    Version = ">=5.0.5"
+    Name = "default.docker"
+    Namespace = "community"
+    Version = ">=5.0.6"
 
   [[dependencies.roles]]
-    Name = "default.konstruktoid.docker_rootless"
+    Name = "default.docker_rootless"
+    Namespace = "konstruktoid"
     Src = "https://github.com/konstruktoid/ansible-role-docker-rootless.git"
     Scm = "git"
     Version = "<1.12.0"

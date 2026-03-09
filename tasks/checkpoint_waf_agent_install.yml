@@ -147,6 +147,7 @@
       when: not cp_agent_waf_logs.stat.exists
 
 - name: Create secrets CP_WAF_AGENT_TOKEN file
+  become: true
   become_user: "{{ docker_user }}"
   ansible.builtin.template:
     src: .CP_WAF_AGENT_TOKEN.j2
@@ -211,6 +212,7 @@
   register: env_file
 
 - name: Create .env file
+  become: true
   become_user: "{{ docker_user }}"
   ansible.builtin.template:
     src: Env.j2
@@ -222,6 +224,7 @@
   notify: restart-cp-waf-agent-docker
 
 - name: Create nginx upstream configuration file
+  become: true
   become_user: "{{ docker_user }}"
   ansible.builtin.template:
     src: nginx_upstreams.conf.j2
@@ -233,6 +236,7 @@
   notify: restart-cp-waf-agent-docker
 
 - name: Create nginx limit configuration file
+  become: true
   become_user: "{{ docker_user }}"
   ansible.builtin.template:
     src: nginx_limits.conf.j2
@@ -244,6 +248,7 @@
   notify: restart-cp-waf-agent-docker
 
 - name: Nginx certificates copy.
+  become: true
   become_user: "{{ docker_user }}"
   ansible.builtin.copy:
     backup: true
@@ -277,6 +282,7 @@
       - "yandex_certificate_crawler.sh"
 
 - name: Copy Yandex Crawler scripts
+  become: true
   become_user: "{{ docker_user }}"
   ansible.builtin.copy:
     backup: true
@@ -316,6 +322,7 @@
   changed_when: false
 
 - name: Copy docker-compose file
+  become: true
   become_user: "{{ docker_user }}"
   ansible.builtin.copy:
     src: docker-compose.yml
@@ -327,6 +334,7 @@
   notify: restart-cp-waf-agent-docker
 
 - name: Copy registration_cmd.sh file
+  become: true
   become_user: "{{ docker_user }}"
   ansible.builtin.copy:
     src: registration_cmd.sh
