@@ -11,6 +11,7 @@ docker_allow_privileged_ports: false
 docker_allow_ping: false
 docker_compose: true
 docker_service_restart: false
+docker_rootless_service_template: docker_rootless_cgroupdriver.service.j2
 docker_daemon_json_template: daemon_no_snapshotter.json.j2
 path_docker: /opt/Docker/root
 path_docker_root: /opt/Docker/root/lib

@@ -18,8 +18,8 @@
       ansible.builtin.include_role:
         name: tests/diffusion_tests
       vars:
-        docker_user: "{{ docker_user }}"
+        docker_user: "docker-adm"
         verify_docker_containers:
           - name: "cp_waf_agent"
             state: "running"
-            image: "{{ docker_full_image_path }}"
+            image: "docker.io/checkpoint/cloudguard-appsec-standalone:1185074"
