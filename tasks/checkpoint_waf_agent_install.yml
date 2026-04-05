@@ -355,6 +355,7 @@
       /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
   community.docker.docker_compose_v2_pull:
     project_src: "{{ path_backend_config }}"
+    docker_host: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
 
 - name: Create systemd service for docker-compose
   ansible.builtin.template:
