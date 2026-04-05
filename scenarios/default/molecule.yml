@@ -12,9 +12,6 @@ platforms:
     pre_build_image: true
     command: /lib/systemd/systemd
     cgroupns_mode: host
-    security_opts:
-      - apparmor=unconfined
-      - seccomp=unconfined
     tmpfs:
       - /tmp
       - /run
