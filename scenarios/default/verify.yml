@@ -2,6 +2,15 @@
 - name: Verify
   hosts: all
   gather_facts: false
+  vars:
+    verify_ports:
+      - port: 8443
+        description: "HTTPS port"
+      - port: 8080
+        description: "HTTP port"
+      - port: 8117
+        description: "Checkpoint nano agent health port."
+ 
   tasks:
     - name: Verify service ports
       ansible.builtin.include_role:
