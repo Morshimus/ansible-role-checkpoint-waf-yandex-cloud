@@ -6,111 +6,22 @@ on:
     - cron: '0 7 * * 1'
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   update:
-    name: Update and Test
+    name: Update Dependencies
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Run Diffusion Update
+        uses: Polar-Team/diffusion/diffusion-update@main
         with:
-          ref: main
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Install SLSA verifier
-        shell: bash
-        run: |
-          SLSA_VERSION="v2.7.0"
-          wget -qO /tmp/slsa-verifier "https://github.com/slsa-framework/slsa-verifier/releases/download/${SLSA_VERSION}/slsa-verifier-linux-amd64"
-          chmod +x /tmp/slsa-verifier
-          sudo mv /tmp/slsa-verifier /usr/local/bin/slsa-verifier
-
-      - name: Download Diffusion
-        shell: bash
-        run: |
-          if [ "${{ inputs.diffusion-version }}" = "latest" ]; then
-            LATEST_RELEASE=$(curl -s https://api.github.com/repos/Polar-Team/diffusion/releases/latest | jq -r .tag_name)
-          else
-            LATEST_RELEASE="${{ inputs.diffusion-version }}"
-          fi
-          echo "DIFFUSION_RELEASE=${LATEST_RELEASE}" >> "$GITHUB_ENV"
-
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "x86_64" ]; then
-            ARCHIVE_NAME="diffusion-linux-amd64.tar.gz"
-          elif [ "$ARCH" = "aarch64" ]; then
-            ARCHIVE_NAME="diffusion-linux-arm64.tar.gz"
-          else
-            echo "Unsupported architecture: $ARCH"
-            exit 1
-          fi
-          echo "DIFFUSION_ARCHIVE=${ARCHIVE_NAME}" >> "$GITHUB_ENV"
-
-          BASE_URL="https://github.com/Polar-Team/diffusion/releases/download/${LATEST_RELEASE}"
-          echo "Downloading Diffusion ${LATEST_RELEASE} (${ARCHIVE_NAME})..."
-          wget -qO /tmp/diffusion.tar.gz        "${BASE_URL}/${ARCHIVE_NAME}"
-          wget -qO /tmp/diffusion.tar.gz.sig    "${BASE_URL}/${ARCHIVE_NAME}.sig"
-          wget -qO /tmp/diffusion.tar.gz.pem    "${BASE_URL}/${ARCHIVE_NAME}.pem"
-          wget -qO /tmp/SHA256SUMS              "${BASE_URL}/SHA256SUMS"
-          wget -qO /tmp/multiple.intoto.jsonl   "${BASE_URL}/multiple.intoto.jsonl"
-
-      - name: Verify Cosign signature
-        shell: bash
-        run: |
-          cosign verify-blob \
-            --certificate /tmp/diffusion.tar.gz.pem \
-            --signature /tmp/diffusion.tar.gz.sig \
-            --certificate-identity-regexp="https://github.com/Polar-Team/diffusion" \
-            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-            /tmp/diffusion.tar.gz
-          echo "Cosign signature verified."
-
-      - name: Verify SLSA provenance
-        shell: bash
-        run: |
-          slsa-verifier verify-artifact /tmp/diffusion.tar.gz \
-            --provenance-path /tmp/multiple.intoto.jsonl \
-            --source-uri github.com/Polar-Team/diffusion \
-            --source-tag "${DIFFUSION_RELEASE}"
-          echo "SLSA provenance verified."
-
-      - name: Install Diffusion
-        shell: bash
-        run: |
-          echo "Extracting archive..."
-          tar -xzf /tmp/diffusion.tar.gz -C /tmp
-          chmod +x /tmp/diffusion
-          sudo mv /tmp/diffusion /usr/local/bin/diffusion
-          rm /tmp/diffusion.tar.gz /tmp/diffusion.tar.gz.sig /tmp/diffusion.tar.gz.pem \
-            /tmp/SHA256SUMS /tmp/multiple.intoto.jsonl
-
-          echo "Verifying installation..."
-          diffusion --version
-
-      - name: Update dependencies
-        run: |
-          diffusion deps lock
-
-
-      - name: Check for changes
-        id: changes
-        run: |
-          diffusion deps check && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
-          
-      - name: Synchronize scenarios requirement files
-        if: steps.changes.outputs.changed == 'true'
-        run: |
-          diffusion deps sync
-
-      - name: Run Diffusion Tests
-        if: steps.changes.outputs.changed == 'true'
-        uses: Polar-Team/diffusion/diffusion-test@main
-        with:
+          target-branch: 'main'
           diffusion-version: 'latest'
           run-lint: 'true'
           run-verify: 'true'
@@ -118,17 +29,5 @@ jobs:
           cache-enabled: 'true'
           cache-uv: 'true'
           cache-docker: 'true'
-
-      - name: Create Pull Request
-        if: steps.changes.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v7
-        with:
-          branch: chore/scheduled-update
-          commit-message: 'chore: update diffusion dependencies'
-          title: 'chore: scheduled diffusion dependency update'
-          body: |
-            Automated dependency update triggered by scheduled workflow.
-
-            Updates were validated against diffusion tests (lint, verify, idempotence).
-          base: main
-          delete-branch: true
+          pr-title: 'chore(deps): update diffusion dependencies'
+          pr-labels: 'dependencies,automated'
