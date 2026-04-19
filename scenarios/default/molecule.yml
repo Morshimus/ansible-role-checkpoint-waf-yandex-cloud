@@ -22,5 +22,9 @@ platforms:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 provisioner:
   name: ansible
+  options:
+    v: true
 verifier:
   name: ansible
+  options:
+    v: true
