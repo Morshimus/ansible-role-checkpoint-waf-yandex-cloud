@@ -26,12 +26,7 @@
       forbid-implicit-octal = true
 
 [ansible_lint]
-  exclude_paths = [
-  "molecule/default/verify.yml",
-  "molecule/default/tests/*.yml",
-  "molecule/default/tests/*/*/*.yml",
-  "tests/test.yml"
-  ]
+  exclude_paths = ["molecule/default/verify.yml", "molecule/default/tests/*.yml", "molecule/default/tests/*/*/*.yml", "tests/test.yml"]
   warn_list = ["meta-no-info", "yaml[line-length]"]
   skip_list = ["meta-incorrect", "role-name[path]"]
 
