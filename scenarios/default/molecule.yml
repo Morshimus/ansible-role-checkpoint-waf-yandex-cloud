@@ -24,6 +24,3 @@ provisioner:
   name: ansible
 verifier:
   name: ansible
-  config_options:
-    defaults:
-      roles_path: "${MOLECULE_SCENARIO_DIRECTORY}"
