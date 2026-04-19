@@ -4,7 +4,7 @@
   gather_facts: false
   tasks:
     - name: Verify service ports
-      ansible.builtin.include_role:
+      ansible.builtin.import_role:
         name: tests/diffusion_tests
       vars:
         verify_ports:
@@ -15,7 +15,7 @@
           - port: 8117
             description: "Checkpoint nano agent health port."
     - name: Test Docker containers
-      ansible.builtin.include_role:
+      ansible.builtin.import_role:
         name: tests/diffusion_tests
       vars:
         docker_user: "docker-adm"
