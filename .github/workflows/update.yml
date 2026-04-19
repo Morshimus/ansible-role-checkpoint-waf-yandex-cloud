@@ -1,0 +1,69 @@
+---
+name: Scheduled Update
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update:
+    name: Update and Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Install Diffusion
+        run: go install github.com/Polar-Team/diffusion@latest
+
+      - name: Update dependencies
+        run: |
+          diffusion deps lock
+
+
+      - name: Check for changes
+        id: changes
+        run: |
+          diffusion deps check && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+          
+      - name: Synchronize scenarios requirement files
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          diffusion deps sync
+
+      - name: Run Diffusion Tests
+        if: steps.changes.outputs.changed == 'true'
+        uses: Polar-Team/diffusion/diffusion-test@main
+        with:
+          diffusion-version: 'latest'
+          run-lint: 'true'
+          run-verify: 'true'
+          run-idempotence: 'true'
+          cache-enabled: 'true'
+          cache-uv: 'true'
+          cache-docker: 'true'
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/scheduled-update
+          commit-message: 'chore: update diffusion dependencies'
+          title: 'chore: scheduled diffusion dependency update'
+          body: |
+            Automated dependency update triggered by scheduled workflow.
+
+            Updates were validated against diffusion tests (lint, verify, idempotence).
+          base: main
+          delete-branch: true
