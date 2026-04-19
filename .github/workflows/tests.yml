@@ -13,20 +13,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Fix rootless Docker AppArmor permissions
-        run: |
-          cat <<'EOT' | sudo tee /etc/apparmor.d/home.runner.bin.rootlesskit
-          abi <abi/4.0>,
-          include <tunables/global>
-
-          /home/runner/bin/rootlesskit flags=(unconfined) {
-            userns,
-
-            include if exists <local/home.runner.bin.rootlesskit>
-          }
-          EOT
-          sudo systemctl restart apparmor.service
-
       - name: Run Diffusion Tests
         uses: Polar-Team/diffusion/diffusion-test@main
         with:
