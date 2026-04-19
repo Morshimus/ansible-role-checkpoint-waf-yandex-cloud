@@ -30,4 +30,4 @@ jobs:
           cache-uv: 'true'
           cache-docker: 'true'
           pr-title: 'chore(deps): update diffusion dependencies'
-          pr-labels: 'dependencies,automated'
+          pr-labels: ''
