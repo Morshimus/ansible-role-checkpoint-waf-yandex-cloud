@@ -13,6 +13,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Disable AppArmor unprivileged userns restriction
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Run Diffusion Tests
         uses: Polar-Team/diffusion/diffusion-test@main
         with:
