@@ -45,8 +45,7 @@ jobs:
           files: polar-checkpoint_waf_agent-${{ steps.version.outputs.version }}.tar.gz
 
       - name: Publish to Ansible Galaxy
-        uses: ansible/ansible-galaxy-import@v1
+        uses: ansible-actions/ansible-galaxy-action@v1.2.0
         with:
-          galaxy-api-key: ${{ secrets.GALAXY_API_KEY }}
-          namespace: Morshimus
-          role-name: checkpoint_waf_agent
+          galaxy_api_key: ${{ secrets.GALAXY_API_KEY }}
+          galaxy_version: ${{ github.ref_name }}
