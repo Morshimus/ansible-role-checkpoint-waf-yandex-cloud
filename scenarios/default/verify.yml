@@ -10,7 +10,7 @@
         description: "HTTP port"
       - port: 8117
         description: "Checkpoint nano agent health port."
- 
+
   tasks:
     - name: Verify service ports
       ansible.builtin.include_role:

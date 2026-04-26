@@ -1,4 +1,4 @@
-####Volumes Options#####
+# ###Volumes Options#####
 
 volumes:
   cp_waf_agent_certs:
@@ -32,7 +32,7 @@ volumes:
       o: "bind"
       device: ${PATH_CP_AGENT_WAF_LOGS:-./Logs}
 
-####Network Options#####
+# ###Network Options#####
 
 networks:
   frontend:
@@ -45,7 +45,7 @@ networks:
         - subnet: 10.89.21.0/28
           gateway: 10.89.21.1
 
-####Logging Options####
+# ###Logging Options####
 
 x-logging: &logging
   driver: "json-file"
@@ -53,28 +53,28 @@ x-logging: &logging
     max-size: "100m"
     max-file: "1"
 
-####Image Options####
+# ###Image Options####
 
 x-cp-waf-agent-image: &cp_waf_agent_IMG "${CP_WAF_AGENT_IMG:-docker.io/checkpoint/cloudguard-appsec-standalone:1185074}"
 
-####Environment Options#####
+# ###Environment Options#####
 
 x-env-cp-waf-agent: &cp_waf_agent_ENV
   CP_WAF_AGENT_TOKEN: "/run/secrets/cp_waf_agent_authorization_token"
 
-####Secrets Options#####
+# ###Secrets Options#####
 
 secrets:
   cp_waf_agent_authorization_token:
     file: secrets/.CP_WAF_AGENT_TOKEN
-####Resource Options#####
+# ###Resource Options#####
 
 x-cp-waf-agent-resources: &resources_common_cp_waf_agent
   limits:
     cpus: ${DOCKER_MAIN_CP_WAF_AGENT_CPU:-2.6}
     memory: ${DOCKER_MAIN_CP_WAF_AGENT_MEM:-1GB}
 
-####Healthchecks Options####
+# ###Healthchecks Options####
 
 x-cp-waf-agent-healthcheck: &cp_waf_agent_healthcheck
   test:
@@ -89,7 +89,7 @@ x-cp-waf-agent-healthcheck: &cp_waf_agent_healthcheck
   start_period: 60s
   retries: 5
 
-####Services Options#####
+# ###Services Options#####
 
 services:
   cp_waf_agent:
