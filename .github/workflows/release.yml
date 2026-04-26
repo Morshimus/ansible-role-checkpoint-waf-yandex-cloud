@@ -44,9 +44,11 @@ jobs:
           generate_release_notes: true
           files: polar-checkpoint_waf_agent-${{ steps.version.outputs.version }}.tar.gz
 
+      - name: Strip namespace from meta for Galaxy import
+        run: sed -i '/^\s*namespace:/d' meta/main.yml
+
       - name: Publish to Ansible Galaxy
         uses: ansible-actions/ansible-galaxy-action@v1.2.0
         with:
           galaxy_api_key: ${{ secrets.GALAXY_API_KEY }}
           galaxy_version: ${{ github.ref_name }}
-          namespace: Morshimus
