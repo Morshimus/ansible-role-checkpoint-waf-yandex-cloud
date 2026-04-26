@@ -2,7 +2,7 @@
 galaxy_info:
   role_name: checkpoint_waf_agent
   company: Polar Team
-  namespace: morshimus
+  namespace: Morshimus
   author: Daniel Dalavurak
   description: Role for installing and register checkpoint waf solution.
   license: MIT
