@@ -25,11 +25,13 @@ jobs:
 
       - name: Create release archive
         run: |
-          tar -czf polar-checkpoint_waf_agent-${{ steps.version.outputs.version }}.tar.gz \
+          ARCHIVE="polar-checkpoint_waf_agent-${{ steps.version.outputs.version }}.tar.gz"
+          tar -czf "/tmp/$ARCHIVE" \
             --exclude='.git' \
             --exclude='.github' \
             --exclude='molecule' \
             .
+          mv "/tmp/$ARCHIVE" .
 
       - name: Generate SLSA provenance
         uses: actions/attest-build-provenance@v2
