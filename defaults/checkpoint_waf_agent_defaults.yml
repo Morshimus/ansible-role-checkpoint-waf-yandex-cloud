@@ -13,7 +13,7 @@ path_cp_agent_waf_logs: "{{ path_backend_config }}/Logs"
 use_yandex_container_registry: false
 
 docker_registry_folder: "checkpoint"
-docker_cp_agent_image: "cloudguard-appsec-standalone:1185074"
+docker_cp_agent_image: "cloudguard-appsec-standalone:1567986"
 docker_full_image_path: >-
   {{
      docker_registry_url + "/" +

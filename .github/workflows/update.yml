@@ -31,3 +31,36 @@ jobs:
           cache-docker: 'true'
           pr-title: 'chore(deps): update diffusion dependencies'
           pr-labels: ''
+
+      - name: Update README.md versions from diffusion.lock
+        run: |
+          # Find the branch created by diffusion-update (most recent remote branch
+          # matching the diffusion update pattern, or fall back to current HEAD).
+          git fetch origin
+          UPDATE_BRANCH=$(git branch -r --sort=-committerdate \
+            | grep -E 'diffusion.*(update|deps)' \
+            | head -1 \
+            | sed 's|origin/||;s/^[[:space:]]*//')
+
+          if [[ -z "$UPDATE_BRANCH" ]]; then
+            echo "No diffusion update branch found — lock file may not have changed."
+            exit 0
+          fi
+
+          echo "Detected update branch: $UPDATE_BRANCH"
+          git checkout "$UPDATE_BRANCH"
+
+          # Run the version sync script
+          bash .github/scripts/update-readme-versions.sh
+
+          # Commit and push if README changed
+          if ! git diff --quiet README.md; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add README.md
+            git commit -m "docs: update README.md resolved versions from diffusion.lock"
+            git push origin "$UPDATE_BRANCH"
+            echo "README.md updated and pushed to $UPDATE_BRANCH"
+          else
+            echo "README.md is already up to date."
+          fi
