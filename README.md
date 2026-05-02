@@ -48,6 +48,7 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 | `docker_allow_ping` | `false` | Allow ICMP ping in containers |
 | `docker_compose` | `true` | Install Docker Compose |
 | `docker_service_restart` | `false` | Restart Docker service after install |
+| `docker_rootless_service_template` | `docker_rootless_cgroupdriver.service.j2` | Template for Docker rootless systemd service (adds cgroupfs driver) |
 | `docker_daemon_json_template` | `daemon_no_snapshotter.json.j2` | Template for Docker daemon config (disables containerd snapshotter) |
 | `path_docker` | `/opt/Docker/root` | Docker root directory |
 | `path_docker_root` | `/opt/Docker/root/lib` | Docker data-root directory |
@@ -274,6 +275,24 @@ yandex_cloud_token_static: "your-yc-iam-token-here"  # for molecule/testing only
 
 ---
 
+## CI / CD
+
+The repository includes three GitHub Actions workflows:
+
+### Tests (`.github/workflows/tests.yml`)
+
+Runs on every pull request and on manual dispatch. Executes the full Diffusion test suite: lint, molecule converge, verify, and idempotence checks against Ubuntu 24.04 with systemd.
+
+### Scheduled Update (`.github/workflows/update.yml`)
+
+Runs weekly (Monday 07:00 UTC) and on manual dispatch. Uses `diffusion-update` to check for dependency updates, runs the full test suite, and opens a PR titled `chore(deps): update diffusion dependencies` if anything changed.
+
+### Release (`.github/workflows/release.yml`)
+
+Triggered by pushing a `v*` tag. Creates a GitHub Release with auto-generated release notes, attaches a tarball with SLSA build provenance attestation, and publishes the role to Ansible Galaxy.
+
+---
+
 ## License
 
 MIT
@@ -295,6 +314,9 @@ Key capabilities:
 - Support for public (ghcr.io, docker.io) and private registries (Yandex Cloud, AWS ECR, GCP)
 - Optional HashiCorp Vault integration for credential management
 - Build cache for Docker images, collections, and Python packages
+- Built-in Diffusion test framework for port and Docker container verification
+
+Molecule scenarios are located in `scenarios/default/` and use the Diffusion test type. Verification tests check that expected ports (8443, 8080, 8117) are listening and the `cp_waf_agent` container is running.
 
 Current `diffusion.toml` settings for this role:
 
@@ -303,13 +325,14 @@ Current `diffusion.toml` settings for this role:
 | Container registry | `ghcr.io` (Public) |
 | Molecule image | `polar-team/diffusion-molecule-container:latest-amd64` |
 | Python | `3.11 – 3.13`, pinned `3.13` |
-| Ansible | `>=13.0.0` → resolved `13.4.0` |
-| ansible-lint | `>=24.0.0` → resolved `26.3.0` |
-| molecule | `>=24.0.0` → resolved `26.3.0` |
+| Ansible | `>=13.0.0` → resolved `14.0.0a2` |
+| ansible-lint | `>=24.0.0` → resolved `26.4.0` |
+| molecule | `>=24.0.0` → resolved `26.4.0` |
 | yamllint | `>=1.35.0` → resolved `1.38.0` |
-| `community.general` | `>=12.2.0` → resolved `12.4.0` |
-| `community.docker` | `>=5.0.6` → resolved `5.0.6` |
-| `konstruktoid.docker_rootless` | `<1.12.0` → resolved `v1.11.0` |
+| `community.general` | `>=12.2.0` → resolved `12.6.0` |
+| `community.docker` | `>=5.0.6` → resolved `5.2.0` |
+| `konstruktoid.docker_rootless` | `>=1.13.0` → resolved `v1.18.0` |
+| Tests | Diffusion (`type = "diffusion"`) |
 | Vault | disabled |
 | Cache | enabled (Docker + uv) |
 

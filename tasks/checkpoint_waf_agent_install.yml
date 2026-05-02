@@ -355,6 +355,10 @@
       /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
   community.docker.docker_compose_v2_pull:
     project_src: "{{ path_backend_config }}"
+  register: docker_pull_result
+  retries: 3
+  delay: 10
+  until: docker_pull_result is not failed
 
 - name: Create systemd service for docker-compose
   ansible.builtin.template:

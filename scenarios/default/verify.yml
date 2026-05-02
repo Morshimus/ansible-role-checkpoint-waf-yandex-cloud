@@ -31,4 +31,4 @@
         verify_docker_containers:
           - name: "cp_waf_agent"
             state: "running"
-            image: "docker.io/checkpoint/cloudguard-appsec-standalone:1185074"
+            image: "docker.io/checkpoint/cloudguard-appsec-standalone:1567986"
