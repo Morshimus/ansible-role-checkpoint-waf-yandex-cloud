@@ -59,6 +59,11 @@
     Namespace = "community"
     Version = ">=5.0.6"
 
+  [[dependencies.collections]]
+    Name = "default.posix"
+    Namespace = "ansible"
+    Version = ">=2.1.0"
+
   [[dependencies.roles]]
     Name = "default.docker_rootless"
     Namespace = "konstruktoid"
