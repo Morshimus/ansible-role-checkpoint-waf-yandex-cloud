@@ -32,3 +32,12 @@ If a required Diffusion command is **not in the safe-list**:
 1. Use `mcp_diffusion_get_diffusion_cli_reference` to look up the correct command syntax and flags.
 2. Run the command locally via `executePwsh` (shell) instead of the MCP tool.
 3. After execution, use MCP tools (`deps check`, `deps resolve`, etc.) to verify the result.
+
+# Local-Only Commands
+
+The following Diffusion CLI commands must **only be run on the local system** via `executePwsh` (terminal). **Never** run them inside a Molecule container (`mcp_diffusion_docker_exec_in_molecule`):
+
+- `diffusion cache *` (e.g. `cache clean`, `cache list`, `cache status`)
+- `diffusion artifact *` (e.g. `artifact list`, `artifact add`, `artifact remove`)
+
+These commands manage local host resources (disk cache, artifact registries) and have no meaning inside a container context.

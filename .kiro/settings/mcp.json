@@ -3,9 +3,13 @@
     "diffusion": {
       "command": "docker",
       "args": [
-        "run", "--rm", "-i",
-        "-v", "/var/run/docker.sock:/var/run/docker.sock",
-        "-v", "./:/project",
+        "run",
+        "--rm",
+        "-i",
+        "-v",
+        "/var/run/docker.sock:/var/run/docker.sock",
+        "-v",
+        "./:/project",
         "ghcr.io/polar-team/diffusion-mcp-server:latest-amd64"
       ],
       "autoApprove": [
@@ -19,7 +23,8 @@
         "check_molecule_yml",
         "check_verify_yml",
         "check_docker_environment",
-        "run_diffusion_command"
+        "run_diffusion_command",
+        "docker_exec_in_molecule"
       ]
     }
   }
