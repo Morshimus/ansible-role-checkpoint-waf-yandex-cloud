@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Diffusion Lock Change Pipeline",
+  "description": "When diffusion.lock is changed, runs `diffusion deps check` to verify if a sync is required. If deps are out of sync, runs `diffusion deps sync` then re-checks. If deps are in sync, runs the full molecule test pipeline: diffusion molecule --force → --lint → --verify → --idempotence.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "diffusion.lock"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "The diffusion.lock file was just changed. Follow this workflow strictly:\n\n1. Run `diffusion deps check` using the Diffusion MCP tool (mcp_diffusion_run_diffusion_command with subcommand \"deps check\").\n2. Inspect the output:\n   - If the check indicates the lock file is OUT OF DATE or a sync is required, run `diffusion deps sync` via executePwsh (since it's not in the MCP safe-list), then re-run `diffusion deps check` via MCP to confirm.\n   - If the check indicates everything is IN SYNC (lock is up-to-date), proceed to step 3.\n3. Run the full molecule test pipeline sequentially using executePwsh. Stop and report if any step fails:\n   a. `diffusion molecule --force` (force reinstall deps + converge)\n   b. `diffusion molecule --lint` (yamllint + ansible-lint)\n   c. `diffusion molecule --verify` (run verification tests)\n   d. `diffusion molecule --idempotence` (idempotence check)\n4. Report the results of each step clearly."
+  }
+}
