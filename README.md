@@ -325,7 +325,7 @@ Current `diffusion.toml` settings for this role:
 | Container registry | `ghcr.io` (Public) |
 | Molecule image | `polar-team/diffusion-molecule-container:latest-amd64` |
 | Python | `3.11 – 3.13`, pinned `3.13` |
-| Ansible | `>=13.0.0` → resolved `14.0.0a1` |
+| Ansible | `>=13.0.0` → resolved `14.0.0a2` |
 | ansible-lint | `>=24.0.0` → resolved `26.4.0` |
 | molecule | `>=24.0.0` → resolved `26.4.0` |
 | yamllint | `>=1.35.0` → resolved `1.38.0` |
