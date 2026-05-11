@@ -23,18 +23,6 @@
       - ".terragrunt-source-manifest"
   when: molecule_yml is not defined
 
-- name: Include defaults from role root (molecule)
-  ansible.builtin.include_vars:
-    dir: "{{ playbook_dir }}/../../defaults"
-  when: molecule_yml is defined
-
-- name: Include vars from role root (molecule)
-  ansible.builtin.include_vars:
-    dir: "{{ playbook_dir }}/../../vars"
-    ignore_files:
-      - ".terragrunt-source-manifest"
-  when: molecule_yml is defined
-
 # ---- System prerequisites ----
 
 - name: Install jq for yandex crawler service

@@ -21,9 +21,6 @@ docker_full_image_path: >-
      "/" + docker_cp_agent_image
   }}
 
-# Multi-agent mode toggle
-checkpoint_waf_multi_agent: false
-
 # Multi-agent profile definitions
 # cp_waf_agent_multi_volumes: list of profiles with port mappings
 #   - profile_name: string   — unique profile identifier (used in dir names, container names)
