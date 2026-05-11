@@ -70,3 +70,25 @@
     Src = "https://github.com/konstruktoid/ansible-role-docker-rootless.git"
     Scm = "git"
     Version = ">=1.13.0"
+
+  [[dependencies.collections]]
+    Name = "multi.general"
+    Namespace = "community"
+    Version = ">=12.2.0"
+
+  [[dependencies.collections]]
+    Name = "multi.docker"
+    Namespace = "community"
+    Version = ">=5.0.6"
+
+  [[dependencies.collections]]
+    Name = "multi.posix"
+    Namespace = "ansible"
+    Version = ">=2.1.0"
+
+  [[dependencies.roles]]
+    Name = "multi.docker_rootless"
+    Namespace = "konstruktoid"
+    Src = "https://github.com/konstruktoid/ansible-role-docker-rootless.git"
+    Scm = "git"
+    Version = ">=1.13.0"

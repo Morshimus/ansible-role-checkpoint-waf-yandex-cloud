@@ -20,3 +20,39 @@ docker_full_image_path: >-
      docker_registry_folder +
      "/" + docker_cp_agent_image
   }}
+
+# Multi-agent mode toggle
+checkpoint_waf_multi_agent: false
+
+# Multi-agent profile definitions
+# cp_waf_agent_multi_volumes: list of profiles with port mappings
+#   - profile_name: string   — unique profile identifier (used in dir names, container names)
+#     https_port: int        — host port mapped to container 443
+#     http_port: int         — host port mapped to container 80
+#     health_port: int       — host port mapped to container 8117
+cp_waf_agent_multi_volumes: []
+
+# cp_waf_agent_multi_images: list of image families referenced by profiles
+#   - family_name: string    — image family identifier (used in compose x- anchors)
+cp_waf_agent_multi_images: []
+
+# cp_waf_agent_multi_envs: per-profile environment and cert configuration
+#   - profile_name: string         — must match a profile_name in cp_waf_agent_multi_volumes
+#     image_family: string         — must match a family_name in cp_waf_agent_multi_images
+#     yc_certificates_ids: []      — list of Yandex CM certificate IDs for this profile
+cp_waf_agent_multi_envs: []
+
+# cp_waf_agent_multi_secrets: per-profile secret references (token files)
+#   - profile_name: string   — must match a profile_name in cp_waf_agent_multi_volumes
+cp_waf_agent_multi_secrets: []
+
+# cp_waf_agent_multi_resources: per-profile Docker resource limits
+#   - profile_name: string   — must match a profile_name in cp_waf_agent_multi_volumes
+#     cpu: string            — CPU limit (e.g. "2.6")
+#     mem: string            — Memory limit (e.g. "1GB")
+cp_waf_agent_multi_resources: []
+
+# cp_waf_agent_multi_network: bridge network config shared by all multi-agent containers
+cp_waf_agent_multi_network:
+  subnet: "172.20.0.0/16"
+  gateway: "172.20.0.1"

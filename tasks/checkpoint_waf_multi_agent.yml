@@ -1,0 +1,367 @@
+---
+# ============================================================
+# checkpoint_waf_multi_agent.yml
+# Deploys multiple WAF agent profiles on a single host using
+# docker-compose-multi.yml.j2 with per-profile directories,
+# tokens, nginx configs, cert crawlers, and a shared systemd
+# service.
+# ============================================================
+
+# ---- Variable loading (mirrors checkpoint_waf_agent_install.yml pattern) ----
+
+- name: Include defaults from role path (production)
+  ansible.builtin.include_vars:
+    dir: "{{ inventory_dir }}/roles/cp_waf_agent/defaults"
+    ignore_files:
+      - ".terragrunt-source-manifest"
+  when: molecule_yml is not defined
+
+- name: Include vars from inventory (production)
+  ansible.builtin.include_vars:
+    dir: "{{ inventory_dir }}/vars"
+    ignore_files:
+      - ".terragrunt-source-manifest"
+  when: molecule_yml is not defined
+
+- name: Include defaults from role root (molecule)
+  ansible.builtin.include_vars:
+    dir: "{{ playbook_dir }}/../../defaults"
+  when: molecule_yml is defined
+
+- name: Include vars from role root (molecule)
+  ansible.builtin.include_vars:
+    dir: "{{ playbook_dir }}/../../vars"
+    ignore_files:
+      - ".terragrunt-source-manifest"
+  when: molecule_yml is defined
+
+# ---- System prerequisites ----
+
+- name: Install jq for yandex crawler service
+  ansible.builtin.apt:
+    pkg:
+      - jq
+    state: present
+    update_cache: true
+  when: >
+    (ansible_distribution == 'Ubuntu' or
+    ansible_distribution == 'Debian') and
+    molecule_yml is defined
+
+- name: Check Docker user
+  become: true
+  ansible.builtin.user:
+    name: "{{ docker_user }}"
+    state: present
+    shell: /bin/bash
+  register: docker_user_info
+
+# ---- Yandex Container Registry login (optional) ----
+
+- name: Get Yandex Cloud IAM token
+  ansible.builtin.shell: |
+    set -o pipefail && \
+    /bin/curl -s \
+    {{ iam_link }} \
+    -H 'Metadata-Flavor: Google' | /bin/jq -r .access_token
+  args:
+    executable: /bin/bash
+  register: yc_token_command_result
+  changed_when: false
+  when: >
+    molecule_yml is not defined and
+    use_yandex_container_registry
+
+- name: Set fact of yc_token
+  ansible.builtin.set_fact:
+    yandex_cloud_token: "{{ yc_token_command_result.stdout }}"
+  when: >
+    molecule_yml is not defined and
+    use_yandex_container_registry
+
+- name: Log into registry
+  become: true
+  become_user: "{{ docker_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
+    DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
+    PATH: >
+      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
+  community.docker.docker_login:
+    registry_url: "{{ docker_registry_url }}"
+    username: iam
+    password: "{{ yandex_cloud_token }}"
+  when: use_yandex_container_registry
+
+# ---- Root WAF directory ----
+
+- name: Check Checkpoint WAF root folder
+  ansible.builtin.stat:
+    path: "{{ path_backend_config }}"
+  register: checkpoint_waf_root
+
+- name: Create Checkpoint WAF root folder
+  ansible.builtin.file:
+    path: "{{ path_backend_config | trim }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+  when: not checkpoint_waf_root.stat.exists
+
+- name: Create shared nginx log folder at host
+  ansible.builtin.file:
+    path: "/var/log/nginx"
+    state: directory
+    mode: "0755"
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+  notify: restart-cp-waf-agent-docker
+
+# ---- Per-profile directory trees ----
+
+- name: Create per-profile AgentConfiguration directory
+  ansible.builtin.file:
+    path: "{{ path_backend_config }}/AgentConfiguration/{{ item.profile_name }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
+
+- name: Create per-profile NginxConfiguration directory
+  ansible.builtin.file:
+    path: "{{ path_backend_config }}/NginxConfiguration/{{ item.profile_name }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
+
+- name: Create per-profile Certs directory
+  ansible.builtin.file:
+    path: "{{ path_backend_config }}/Certs/{{ item.profile_name }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
+
+- name: Create per-profile Data directory
+  ansible.builtin.file:
+    path: "{{ path_backend_config }}/Data/{{ item.profile_name }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
+
+- name: Create per-profile Logs directory
+  ansible.builtin.file:
+    path: "{{ path_backend_config }}/Logs/{{ item.profile_name }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
+
+- name: Create per-profile secrets directory
+  ansible.builtin.file:
+    path: "{{ path_backend_config }}/secrets/{{ item.profile_name }}"
+    state: directory
+    mode: "0754"
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
+
+# ---- Per-profile token files ----
+
+- name: Create per-profile CP_WAF_AGENT_TOKEN file
+  become: true
+  become_user: "{{ docker_user }}"
+  ansible.builtin.template:
+    src: .CP_WAF_AGENT_TOKEN.j2
+    dest: "{{ path_backend_config }}/secrets/{{ item.profile_name }}/.CP_WAF_AGENT_TOKEN"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: "0754"
+  loop: "{{ cp_waf_agent_multi_secrets }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
+  notify: restart-cp-waf-agent-docker
+
+# ---- Per-profile nginx configs ----
+
+- name: Create per-profile nginx upstream configuration
+  become: true
+  become_user: "{{ docker_user }}"
+  ansible.builtin.template:
+    src: nginx_upstreams.conf.j2
+    dest: "{{ path_backend_config }}/NginxConfiguration/{{ item.profile_name }}/upstreams.conf"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: "0777"
+  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
+  notify: restart-cp-waf-agent-docker
+
+- name: Create per-profile nginx limit configuration
+  become: true
+  become_user: "{{ docker_user }}"
+  ansible.builtin.template:
+    src: nginx_limits.conf.j2
+    dest: "{{ path_backend_config }}/NginxConfiguration/{{ item.profile_name }}/limits.conf"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: "0777"
+  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
+  notify: restart-cp-waf-agent-docker
+
+# ---- Multi-agent .env and docker-compose ----
+
+- name: Create multi-agent .env file
+  become: true
+  become_user: "{{ docker_user }}"
+  ansible.builtin.template:
+    src: EnvMulti.j2
+    dest: "{{ path_backend_config }}/.env"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: "0600"
+  notify: restart-cp-waf-agent-docker
+
+- name: Deploy docker-compose-multi.yml template
+  become: true
+  become_user: "{{ docker_user }}"
+  ansible.builtin.template:
+    src: docker-compose-multi.yml.j2
+    dest: "{{ path_backend_config }}/docker-compose.yml"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: "0777"
+  notify: restart-cp-waf-agent-docker
+
+- name: Copy registration_cmd.sh file
+  become: true
+  become_user: "{{ docker_user }}"
+  ansible.builtin.copy:
+    src: registration_cmd.sh
+    dest: "{{ path_backend_config }}/registration_cmd.sh"
+    backup: true
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: a+x
+  notify: restart-cp-waf-agent-docker
+
+# ---- Pull images ----
+
+- name: Docker compose pull images
+  become: true
+  become_user: "{{ docker_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
+    DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
+    PATH: >
+      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ path_backend_config }}"
+  register: docker_pull_result
+  retries: 3
+  delay: 10
+  until: docker_pull_result is not failed
+
+# ---- Systemd service for docker-compose ----
+
+- name: Create systemd service for docker-compose (multi-agent)
+  ansible.builtin.template:
+    src: cp_waf_agent.service.j2
+    dest: /etc/systemd/system/checkpoint_waf_agent_docker.service
+    backup: true
+    mode: "0600"
+  notify: daemon-reload
+
+# ---- Yandex certificate crawler (per profile) ----
+
+- name: Create shared yc_cert_crawler directory
+  ansible.builtin.file:
+    path: "{{ path_backend_config }}/yc_cert_crawler"
+    state: directory
+    mode: "0755"
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+
+- name: Copy Yandex Crawler scripts
+  become: true
+  become_user: "{{ docker_user }}"
+  ansible.builtin.copy:
+    backup: true
+    src: "yandex_certificate_crawler/{{ item }}"
+    dest: "{{ path_backend_config }}/yc_cert_crawler/{{ item }}"
+    mode: "0777"
+    owner: "{{ docker_user }}"
+  loop:
+    - "run.sh"
+    - "yandex_certificate_crawler.sh"
+
+- name: Install per-profile systemd service for yandex certificate crawler
+  ansible.builtin.template:
+    src: yandex_certificate_crawler_profile.service.j2
+    dest: "/etc/systemd/system/yandex_certificate_crawler_{{ item.profile_name }}.service"
+    backup: true
+    mode: "0600"
+  vars:
+    profile_name: "{{ item.profile_name }}"
+    profile_yc_certificates_ids: "{{ item.yc_certificates_ids | default([]) }}"
+  loop: "{{ cp_waf_agent_multi_envs }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
+  register: yandex_certificate_crawler_services
+
+- name: Install per-profile systemd timer for yandex certificate crawler
+  ansible.builtin.template:
+    src: yandex_certificate_crawler_profile.timer.j2
+    dest: "/etc/systemd/system/yandex_certificate_crawler_{{ item.profile_name }}.timer"
+    backup: true
+    mode: "0600"
+  vars:
+    profile_name: "{{ item.profile_name }}"
+  loop: "{{ cp_waf_agent_multi_envs }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
+  register: yandex_certificate_crawler_timers
+
+- name: Reload systemd configuration
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: >
+    yandex_certificate_crawler_services.changed or
+    yandex_certificate_crawler_timers.changed
+
+- name: Start per-profile yandex crawler services
+  ansible.builtin.systemd:
+    name: "yandex_certificate_crawler_{{ item.profile_name }}"
+    state: started
+  changed_when: false
+  loop: "{{ cp_waf_agent_multi_envs }}"
+  loop_control:
+    label: "{{ item.profile_name }}"

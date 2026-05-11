@@ -386,3 +386,153 @@ The `diffusion.lock` file is auto-generated — do not edit it manually.
 6. Open a pull request with a clear description of what changed and why.
 
 Linting rules (yamllint + ansible-lint) are defined in `diffusion.toml` and enforced by CI automatically.
+
+---
+
+## Multi-Agent Mode (`checkpoint_waf_multi_agent`)
+
+Multi-agent mode deploys **multiple WAF profiles** on a single host, each running as an independent Docker container with its own directories, token, nginx config, ports, and certificate crawler.
+
+Enable it by setting `checkpoint_waf_multi_agent: true` in your vars and providing the profile lists described below.
+
+### How it works
+
+- A **single `docker-compose.yml`** (rendered from `docker-compose-multi.yml.j2`) is deployed, containing one service per profile.
+- Each profile gets its own subdirectory tree under `path_backend_config`:
+  ```
+  /opt/CloudGuard/WAF/
+  ├── AgentConfiguration/<profile>/
+  ├── NginxConfiguration/<profile>/
+  ├── Certs/<profile>/
+  ├── Data/<profile>/
+  ├── Logs/<profile>/
+  └── secrets/<profile>/.CP_WAF_AGENT_TOKEN
+  ```
+- A **per-profile systemd cert crawler service + timer** is installed for each profile.
+- All profiles share the same `checkpoint_waf_agent_docker.service` systemd unit (starts/stops the whole compose stack).
+
+### Required Variables
+
+#### `cp_waf_agent_multi_volumes`
+One entry per profile. Controls port mappings and the profile identifier used in all other lists.
+
+```yaml
+cp_waf_agent_multi_volumes:
+  - profile_name: profile1      # unique identifier — used in dir names, container names
+    https_port: 8443            # host port → container 443
+    http_port: 8080             # host port → container 80
+    health_port: 8117           # host port → container 8117 (nano-agent health)
+  - profile_name: profile2
+    https_port: 9443
+    http_port: 9080
+    health_port: 9117
+```
+
+#### `cp_waf_agent_multi_images`
+Image families referenced by `cp_waf_agent_multi_envs`. Typically one entry unless profiles use different WAF builds.
+
+```yaml
+cp_waf_agent_multi_images:
+  - family_name: default
+```
+
+#### `cp_waf_agent_multi_envs`
+Per-profile environment config. `profile_name` must match an entry in `cp_waf_agent_multi_volumes`.
+
+```yaml
+cp_waf_agent_multi_envs:
+  - profile_name: profile1
+    image_family: default
+    yc_certificates_ids:        # Yandex CM certificate IDs for this profile
+      - cert-xxxx-1
+  - profile_name: profile2
+    image_family: default
+    yc_certificates_ids: []
+```
+
+#### `cp_waf_agent_multi_secrets`
+Declares which profiles need a token file written to `secrets/<profile>/.CP_WAF_AGENT_TOKEN`.
+
+```yaml
+cp_waf_agent_multi_secrets:
+  - profile_name: profile1
+  - profile_name: profile2
+```
+
+#### `cp_waf_agent_multi_resources`
+Per-profile Docker resource limits. If omitted for a profile, compose defaults apply.
+
+```yaml
+cp_waf_agent_multi_resources:
+  - profile_name: profile1
+    cpu: "2.6"
+    mem: "1GB"
+  - profile_name: profile2
+    cpu: "2.0"
+    mem: "1GB"
+```
+
+#### `cp_waf_agent_multi_network`
+Shared Docker bridge network for all profile containers.
+
+```yaml
+cp_waf_agent_multi_network:
+  subnet: "172.20.0.0/16"
+  gateway: "172.20.0.1"
+```
+
+### Example Play
+
+```yaml
+- hosts: waf_hosts
+  vars:
+    checkpoint_waf_multi_agent: true
+    cp_waf_agent_multi_network:
+      subnet: "172.20.0.0/16"
+      gateway: "172.20.0.1"
+    cp_waf_agent_multi_images:
+      - family_name: default
+    cp_waf_agent_multi_volumes:
+      - profile_name: app_a
+        https_port: 8443
+        http_port: 8080
+        health_port: 8117
+      - profile_name: app_b
+        https_port: 9443
+        http_port: 9080
+        health_port: 9117
+    cp_waf_agent_multi_envs:
+      - profile_name: app_a
+        image_family: default
+        yc_certificates_ids:
+          - cert-xxxx-app-a
+      - profile_name: app_b
+        image_family: default
+        yc_certificates_ids: []
+    cp_waf_agent_multi_secrets:
+      - profile_name: app_a
+      - profile_name: app_b
+    cp_waf_agent_multi_resources:
+      - profile_name: app_a
+        cpu: "2.6"
+        mem: "1GB"
+      - profile_name: app_b
+        cpu: "2.0"
+        mem: "1GB"
+  roles:
+    - checkpoint_waf_agent
+```
+
+### Molecule Test Scenario
+
+A dedicated molecule scenario exists at `scenarios/multi/`. It deploys two profiles (`profile1` on ports 8443/8080/8117, `profile2` on ports 9443/9080/9117) and verifies that all six ports are listening and both containers are running.
+
+```bash
+# Run the multi-agent scenario
+diffusion molecule --scenario-name multi
+
+# Or step by step
+diffusion molecule --scenario-name multi --converge
+diffusion molecule --scenario-name multi --verify
+diffusion molecule --scenario-name multi --idempotence
+```

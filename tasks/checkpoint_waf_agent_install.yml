@@ -179,11 +179,6 @@
     molecule_yml is not defined and
     use_yandex_container_registry
 
-- name: Set fact of yc_token MOLECULE
-  ansible.builtin.set_fact:
-    yandex_cloud_token: "{{ yandex_cloud_token_static }}"
-  when: molecule_yml is defined
-
 - name: Check Docker user
   become: true
   ansible.builtin.user:

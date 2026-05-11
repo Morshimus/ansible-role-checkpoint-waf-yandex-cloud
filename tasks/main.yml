@@ -16,3 +16,14 @@
         - checkpoint_waf_agent
   tags:
     - checkpoint_waf_agent
+  when: not checkpoint_waf_multi_agent
+
+- name: Install Checkpoint WAF Agent Profiles  # multi-agent mode
+  ansible.builtin.include_tasks:
+    file: checkpoint_waf_multi_agent.yml
+    apply:
+      tags:
+        - checkpoint_waf_multi_agent
+  tags:
+    - checkpoint_waf_multi_agent
+  when: checkpoint_waf_multi_agent
