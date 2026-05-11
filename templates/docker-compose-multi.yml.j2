@@ -1,4 +1,3 @@
-
 # ###Volumes Options#####
 
 volumes:
@@ -8,31 +7,31 @@ volumes:
     driver_opts:
       type: "none"
       o: "bind"
-      device: ${PATH_CP_AGENT_WAF_CERTS_{{ volume.profile_name | upper }}:-./Certs/{{ volume.profile_name }}}
+      device: ${PATH_CP_AGENT_WAF_CERTS_{{ volume.profile_name | upper }}:-{{ path_backend_config }}/Certs/{{ volume.profile_name }}}
   cp_waf_agent_conf_{{ volume.profile_name }}:
     driver: local
     driver_opts:
       type: "none"
       o: "bind"
-      device: ${PATH_CP_AGENT_WAF_CONFIGURATION_{{ volume.profile_name | upper }}:-./AgentConfiguration/{{ volume.profile_name }}}
+      device: ${PATH_CP_AGENT_WAF_CONFIGURATION_{{ volume.profile_name | upper }}:-{{ path_backend_config }}/AgentConfiguration/{{ volume.profile_name }}}
   cp_waf_nginx_conf_{{ volume.profile_name }}:
     driver: local
     driver_opts:
       type: "none"
       o: "bind"
-      device: ${PATH_CP_NGINX_CONFIGURATION_{{ volume.profile_name | upper }}:-./NginxConfiguration/{{ volume.profile_name }}}
+      device: ${PATH_CP_NGINX_CONFIGURATION_{{ volume.profile_name | upper }}:-{{ path_backend_config }}/NginxConfiguration/{{ volume.profile_name }}}
   cp_waf_agent_data_{{ volume.profile_name }}:
     driver: local
     driver_opts:
       type: "none"
       o: "bind"
-      device: ${PATH_CP_AGENT_WAF_DATA_{{ volume.profile_name | upper }}:-./Data/{{ volume.profile_name }}}
+      device: ${PATH_CP_AGENT_WAF_DATA_{{ volume.profile_name | upper }}:-{{ path_backend_config }}/Data/{{ volume.profile_name }}}
   cp_waf_agent_logs_{{ volume.profile_name }}:
     driver: local
     driver_opts:
       type: "none"
       o: "bind"
-      device: ${PATH_CP_AGENT_WAF_LOGS_{{ volume.profile_name | upper }}:-./Logs/{{ volume.profile_name }}}
+      device: ${PATH_CP_AGENT_WAF_LOGS_{{ volume.profile_name | upper }}:-{{ path_backend_config }}/Logs/{{ volume.profile_name }}}
 {% endfor %}
 
 # ###Network Options#####
@@ -56,36 +55,6 @@ x-logging: &logging
     max-size: "100m"
     max-file: "1"
 
-# ###Image Options####
-
-{% for image in cp_waf_agent_multi_images %}
-x-cp-waf-agent-image-{{ image.family_name }}: &cp_waf_agent_IMG_{{ image.family_name }} "${CP_WAF_AGENT_IMG_{{ image.family_name | upper }}:-docker.io/checkpoint/cloudguard-appsec-standalone:1567986}"
-{% endfor %}
-
-# ###Environment Options#####
-
-{% for env in cp_waf_agent_multi_envs %}
-x-env-cp-waf-agent-{{ env.profile_name }}: &cp_waf_agent_ENV_{{ env.profile_name }}
-  CP_WAF_AGENT_TOKEN: "/run/secrets/cp_waf_agent_authorization_token_{{ env.profile_name }}"
-{% endfor %}
-
-# ###Secrets Options#####
-
-secrets:
-{% for secret in cp_waf_agent_multi_secrets %}
-  cp_waf_agent_authorization_token_{{ secret.profile_name }}:
-    file: secrets/{{ secret.profile_name }}/.CP_WAF_AGENT_TOKEN
-{% endfor %}
-
-# ###Resource Options#####
-
-{% for resource in cp_waf_agent_multi_resources %}
-x-cp-waf-agent-resources-{{ resource.profile_name }}: &resources_cp_waf_agent_{{ resource.profile_name }}
-  limits:
-    cpus: ${DOCKER_MAIN_CP_WAF_AGENT_CPU_{{ resource.profile_name | upper }}:-{{ resource.cpu | default('2.6') }}}
-    memory: ${DOCKER_MAIN_CP_WAF_AGENT_MEM_{{ resource.profile_name | upper }}:-{{ resource.mem | default('1GB') }}}
-{% endfor %}
-
 # ###Healthchecks Options####
 
 x-cp-waf-agent-healthcheck: &cp_waf_agent_healthcheck
@@ -101,6 +70,14 @@ x-cp-waf-agent-healthcheck: &cp_waf_agent_healthcheck
   start_period: 60s
   retries: 5
 
+# ###Secrets Options#####
+
+secrets:
+{% for secret in cp_waf_agent_multi_secrets %}
+  cp_waf_agent_authorization_token_{{ secret.profile_name }}:
+    file: secrets/{{ secret.profile_name }}/.CP_WAF_AGENT_TOKEN
+{% endfor %}
+
 # ###Services Options#####
 
 services:
@@ -108,17 +85,19 @@ services:
 {% set env = cp_waf_agent_multi_envs | selectattr('profile_name', 'equalto', volume.profile_name) | first | default({}) %}
 {% set resource = cp_waf_agent_multi_resources | selectattr('profile_name', 'equalto', volume.profile_name) | first | default({}) %}
   cp_waf_agent_{{ volume.profile_name }}:
-    image: *cp_waf_agent_IMG_{{ env.image_family | default('default') }}
+    image: "${CP_WAF_AGENT_IMG_{{ (env.image_family | default('default')) | upper }}:-{{ docker_full_image_path }}}"
     container_name: cp_waf_agent_{{ volume.profile_name }}
     ports:
       - "{{ volume.https_port }}:443"
       - "{{ volume.http_port }}:80"
       - "{{ volume.health_port }}:8117"
-{% if resource %}
     deploy:
-      resources: *resources_cp_waf_agent_{{ volume.profile_name }}
-{% endif %}
-    environment: *cp_waf_agent_ENV_{{ volume.profile_name }}
+      resources:
+        limits:
+          cpus: "${DOCKER_MAIN_CP_WAF_AGENT_CPU_{{ volume.profile_name | upper }}:-{{ resource.cpu | default('2.6') }}}"
+          memory: "${DOCKER_MAIN_CP_WAF_AGENT_MEM_{{ volume.profile_name | upper }}:-{{ resource.mem | default('1GB') }}}"
+    environment:
+      CP_WAF_AGENT_TOKEN: "/run/secrets/cp_waf_agent_authorization_token_{{ volume.profile_name }}"
     command: /bin/bash -c "/registration_cmd.sh"
     restart: unless-stopped
     healthcheck: *cp_waf_agent_healthcheck
