@@ -1,7 +1,7 @@
 ---
 - name: Include all  in defaults and all nested directories
   ansible.builtin.include_vars:
-    dir: "{{ inventory_dir }}/roles/cp_waf_agent/defaults"
+    dir: "{{ inventory_dir }}/roles/{{ role_name }}/defaults"
     ignore_files:
       - ".terragrunt-source-manifest"
   when: molecule_yml is not defined
@@ -22,18 +22,6 @@
   ansible.builtin.include_vars:
     dir: "{{ playbook_dir }}/../../defaults"
   when: molecule_yml is defined
-
-- name: Install iptables and sudo MOLECULE
-  ansible.builtin.apt:
-    pkg:
-      - iptables
-      - sudo
-    state: present
-    update_cache: true
-  when: >
-    (ansible_distribution == 'Ubuntu' or
-    ansible_distribution == 'Debian') and
-    molecule_yml is defined
 
 - name: Add Docker user
   become: true
@@ -56,45 +44,7 @@
 - name: Install Docker Rootless
   ansible.builtin.include_role:
     name: docker_rootless
-  when: molecule_yml is not defined
-
-- name: Install Docker Rootless MOLECULE
-  when: molecule_yml is defined
-  block:
-    - name: Check if current ip tables is legacy
-      ansible.builtin.shell: |
-        set -o pipefail && \
-        update-alternatives --get-selections \
-        | grep iptables
-      register: iptables_mode
-      args:
-        executable: /bin/bash
-      changed_when:
-        - "'/usr/sbin/iptables-legacy' not in iptables_mode.stdout"
-      when: >
-        ansible_facts['distribution'] == 'Ubuntu' or
-        ansible_facts['distribution'] == 'Debian'
-
-    - name: Set-up Iptables to legacy mode.
-      ansible.builtin.shell: |
-        update-alternatives --set iptables /usr/sbin/iptables-legacy
-      args:
-        executable: /bin/sh
-      changed_when:
-        - "'/usr/sbin/iptables-legacy' not in iptables_mode.stdout"
-
-    - name: Install Rootless role.
-      ansible.builtin.include_role:
-        name: docker_rootless
-
-    - name: Install Docker Compose
-      ansible.builtin.apt:
-        pkg:
-          - docker-compose
-        state: present
-      when: >
-        ansible_distribution == 'Ubuntu' or
-        ansible_distribution == 'Debian'
+    public: true
 
 - name: Check if lingering is already enabled for the user MOLECULE
   ansible.builtin.stat:

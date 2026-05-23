@@ -1,0 +1,52 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    checkpoint_waf_multi_agent: true
+    cp_waf_agent_multi_network:
+      subnet: "172.20.0.0/16"
+      gateway: "172.20.0.1"
+    cp_waf_agent_multi_images:
+      - family_name: default
+        registry_url: docker.io
+        registry_folder: checkpoint
+        cp_agent_image: cloudguard-appsec-standalone:1567986
+      - family_name: latest
+        registry_url: docker.io
+        registry_folder: checkpoint
+        cp_agent_image: cloudguard-appsec-standalone:latest
+    cp_waf_agent_multi_services:
+      - profile_name: profile1
+        https_port: 8443
+        http_port: 8080
+        health_port: 8117
+      - profile_name: profile2
+        https_port: 9443
+        http_port: 9080
+        health_port: 9117
+    cp_waf_agent_multi_envs:
+      - profile_name: profile1
+        image_family: default
+        yc_certificates_ids: []
+      - profile_name: profile2
+        image_family: latest
+        yc_certificates_ids: []
+    cp_waf_agent_multi_secrets:
+      - profile_name: profile1
+        secret: dummy-xxx-xxx-1
+      - profile_name: profile2
+        secret: dummy-xxx-xxx-2
+    cp_waf_agent_multi_resources:
+      - profile_name: profile1
+        cpu: "2.0"
+        mem: "1GB"
+      - profile_name: profile2
+        cpu: "2.0"
+        mem: "1GB"
+  tasks:
+    - name: "Include Ansible role"
+      ansible.builtin.include_role:
+        name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
+      tags:
+        - docker
+        - checkpoint_waf_multi_agent

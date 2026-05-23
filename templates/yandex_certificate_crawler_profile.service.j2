@@ -1,0 +1,18 @@
+[Unit]
+Description=Yandex Cloud certificate crawler for profile {{ profile_name }}
+StartLimitBurst=10
+StartLimitIntervalSec=90
+
+[Service]
+Delegate=cpu cpuset io memory pids
+Environment="XDG_RUNTIME_DIR=/run/user/{{ docker_user_info.uid }}"
+Environment="DOCKER_HOST=unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
+User={{ docker_user }}
+Group={{ docker_user }}
+WorkingDirectory={{ path_backend_config }}/yc_cert_crawler
+
+#Start crawler process for profile {{ profile_name }}
+ExecStart=/bin/bash ./run.sh {% if profile_yc_certificates_ids is defined and profile_yc_certificates_ids | length > 0 %}{% for certificate in profile_yc_certificates_ids %}-c "{{ certificate }}" {% endfor %}{% endif %} -t "{{ path_backend_config }}/Certs/{{ profile_name }}" {% if molecule_yml is not defined %}-i "{{ iam_link }}"{% else %} -a "{{ yandex_cloud_token }}"{% endif %}
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,124 @@
+# ###Volumes Options#####
+
+volumes:
+{% for service in cp_waf_agent_multi_services %}
+  cp_waf_agent_certs_{{ service.profile_name }}:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: ${PATH_CP_AGENT_WAF_CERTS_{{ service.profile_name | upper }}:-{{ path_backend_config }}/Certs/{{ service.profile_name }}}
+  cp_waf_agent_conf_{{ service.profile_name }}:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: ${PATH_CP_AGENT_WAF_CONFIGURATION_{{ service.profile_name | upper }}:-{{ path_backend_config }}/AgentConfiguration/{{ service.profile_name }}}
+  cp_waf_nginx_conf_{{ service.profile_name }}:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: ${PATH_CP_NGINX_CONFIGURATION_{{ service.profile_name | upper }}:-{{ path_backend_config }}/NginxConfiguration/{{ service.profile_name }}}
+  cp_waf_agent_data_{{ service.profile_name }}:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: ${PATH_CP_AGENT_WAF_DATA_{{ service.profile_name | upper }}:-{{ path_backend_config }}/Data/{{ service.profile_name }}}
+  cp_waf_agent_logs_{{ service.profile_name }}:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: ${PATH_CP_AGENT_WAF_LOGS_{{ service.profile_name | upper }}:-{{ path_backend_config }}/Logs/{{ service.profile_name }}}
+{% endfor %}
+
+# ###Network Options#####
+
+networks:
+  frontend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+      config:
+        - subnet: {{ cp_waf_agent_multi_network.subnet }}
+          gateway: {{ cp_waf_agent_multi_network.gateway }}
+
+# ###Logging Options####
+
+x-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "100m"
+    max-file: "1"
+
+# ###Healthchecks Options####
+
+x-cp-waf-agent-healthcheck: &cp_waf_agent_healthcheck
+  test:
+    [
+      "CMD",
+      "/bin/sh",
+      "-c",
+      "cpnano -s | grep 'Registration status: Succeeded' ",
+    ]
+  interval: 30s
+  timeout: 30s
+  start_period: 60s
+  retries: 5
+
+# ###Secrets Options#####
+
+secrets:
+{% for secret in cp_waf_agent_multi_secrets %}
+  cp_waf_agent_authorization_token_{{ secret.profile_name }}:
+    file: secrets/{{ secret.profile_name }}/.CP_WAF_AGENT_TOKEN
+{% endfor %}
+
+# ###Services Options#####
+
+services:
+{% for service in cp_waf_agent_multi_services %}
+{% set env = cp_waf_agent_multi_envs | selectattr('profile_name', 'equalto', service.profile_name) | first | default({}) %}
+{% set resource = cp_waf_agent_multi_resources | selectattr('profile_name', 'equalto', service.profile_name) | first | default({}) %}
+  cp_waf_agent_{{ service.profile_name }}:
+    image: "${CP_WAF_AGENT_IMG_{{ (env.image_family | default('default')) | upper }}:-{{ docker_full_image_path }}}"
+    container_name: cp_waf_agent_{{ service.profile_name }}
+    profiles: [{{ service.profile_name }}]
+    ports:
+      - "{{ service.https_port }}:443"
+      - "{{ service.http_port }}:80"
+      - "{{ service.health_port }}:8117"
+    deploy:
+      resources:
+        limits:
+          cpus: "${DOCKER_MAIN_CP_WAF_AGENT_CPU_{{ service.profile_name | upper }}:-{{ resource.cpu | default('2.6') }}}"
+          memory: "${DOCKER_MAIN_CP_WAF_AGENT_MEM_{{ service.profile_name | upper }}:-{{ resource.mem | default('1GB') }}}"
+    environment:
+      CP_WAF_AGENT_TOKEN: "/run/secrets/cp_waf_agent_authorization_token_{{ service.profile_name }}"
+    command: /bin/bash -c "/registration_cmd.sh"
+    restart: unless-stopped
+    healthcheck: *cp_waf_agent_healthcheck
+    secrets:
+      - cp_waf_agent_authorization_token_{{ service.profile_name }}
+    networks:
+      - frontend
+    volumes:
+      - ./registration_cmd.sh:/registration_cmd.sh
+      - /etc/ssl/certs:/etc/ssl/certs
+      - /var/log/nginx:/var/log/nginx:rw
+      - cp_waf_agent_logs_{{ service.profile_name }}:/var/log/nano_agent
+      - cp_waf_agent_data_{{ service.profile_name }}:/etc/cp/data
+      - cp_waf_agent_conf_{{ service.profile_name }}:/etc/cp/conf
+      - cp_waf_nginx_conf_{{ service.profile_name }}:/etc/nginx/conf.d
+      - cp_waf_agent_certs_{{ service.profile_name }}:/appsec/etc/certs
+    logging: *logging
+    labels:
+      org.label-schema.group: "security"
+      org.manufacturer: "Checkpoint"
+      org.product: "CloudGuard-Appsec-Standalone"
+      org.profile: "{{ service.profile_name }}"
+{% endfor %}

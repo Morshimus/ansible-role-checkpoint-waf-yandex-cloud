@@ -6,7 +6,7 @@ dependency:
 driver:
   name: docker
 platforms:
-  - name: Ubuntu-24-04
+  - name: Ubuntu-24-04-multi
     image: geerlingguy/docker-ubuntu2404-ansible:latest
     privileged: true
     pre_build_image: true
@@ -24,5 +24,9 @@ provisioner:
   name: ansible
   playbooks:
     prepare: prepare.yml
+  inventory:
+    group_vars:
+      all:
+        checkpoint_waf_multi_agent: true
 verifier:
   name: ansible

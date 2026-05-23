@@ -1,0 +1,56 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Install iptables and sudo MOLECULE
+      ansible.builtin.apt:
+        pkg:
+          - iptables
+          - sudo
+        state: present
+        update_cache: true
+      when: >
+        (ansible_distribution == 'Ubuntu' or
+        ansible_distribution == 'Debian') and
+        molecule_yml is defined
+
+    - name: Install Docker Rootless MOLECULE
+      when: molecule_yml is defined
+      block:
+        - name: Check if current ip tables is legacy
+          ansible.builtin.shell: |
+            set -o pipefail && \
+            update-alternatives --get-selections \
+            | grep iptables
+          register: iptables_mode
+          args:
+            executable: /bin/bash
+          changed_when:
+            - "'/usr/sbin/iptables-legacy' not in iptables_mode.stdout"
+          when: >
+            ansible_facts['distribution'] == 'Ubuntu' or
+            ansible_facts['distribution'] == 'Debian'
+
+        - name: Set-up Iptables to legacy mode.
+          ansible.builtin.shell: |
+            update-alternatives --set iptables /usr/sbin/iptables-legacy
+          args:
+            executable: /bin/sh
+          changed_when:
+            - "'/usr/sbin/iptables-legacy' not in iptables_mode.stdout"
+
+        - name: Install Docker Compose
+          ansible.builtin.apt:
+            pkg:
+              - docker-compose
+            state: present
+          when: >
+            ansible_distribution == 'Ubuntu' or
+            ansible_distribution == 'Debian'
+
+    - name: Set fact of yc_token MOLECULE
+      ansible.builtin.set_fact:
+        yandex_cloud_token: dummy-xxxx-xxxx-xxx
+      when: molecule_yml is defined

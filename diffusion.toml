@@ -28,7 +28,7 @@
 [ansible_lint]
   exclude_paths = ["molecule/default/verify.yml", "molecule/default/tests/*.yml", "molecule/default/tests/*/*/*.yml", "tests/test.yml"]
   warn_list = ["meta-no-info", "yaml[line-length]"]
-  skip_list = ["meta-incorrect", "role-name[path]"]
+  skip_list = ["meta-incorrect", "role-name[path]", "role-name", "var-naming[no-role-prefix]"]
 
 [tests]
   type = "diffusion"
@@ -66,6 +66,28 @@
 
   [[dependencies.roles]]
     Name = "default.docker_rootless"
+    Namespace = "konstruktoid"
+    Src = "https://github.com/konstruktoid/ansible-role-docker-rootless.git"
+    Scm = "git"
+    Version = ">=1.13.0"
+
+  [[dependencies.collections]]
+    Name = "multi.general"
+    Namespace = "community"
+    Version = ">=12.2.0"
+
+  [[dependencies.collections]]
+    Name = "multi.docker"
+    Namespace = "community"
+    Version = ">=5.0.6"
+
+  [[dependencies.collections]]
+    Name = "multi.posix"
+    Namespace = "ansible"
+    Version = ">=2.1.0"
+
+  [[dependencies.roles]]
+    Name = "multi.docker_rootless"
     Namespace = "konstruktoid"
     Src = "https://github.com/konstruktoid/ansible-role-docker-rootless.git"
     Scm = "git"

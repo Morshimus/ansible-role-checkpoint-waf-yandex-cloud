@@ -20,3 +20,40 @@ docker_full_image_path: >-
      docker_registry_folder +
      "/" + docker_cp_agent_image
   }}
+
+# Multi-agent profile definitions
+# cp_waf_agent_multi_services: list of profiles with port mappings
+#   - profile_name: string
+#     https_port: int
+#     http_port: int
+#     health_port: int
+# cp_waf_agent_multi_services: []
+
+# cp_waf_agent_multi_images: list of image families referenced by profiles
+#   - family_name: string
+#      registry_url: string
+#      registry_folder: string
+#      cp_agent_image: string
+# cp_waf_agent_multi_images: []
+
+# cp_waf_agent_multi_envs: per-profile environment and cert configuration
+#   - profile_name: string
+#     image_family: string
+#     yc_certificates_ids: []
+# cp_waf_agent_multi_envs: []
+
+# cp_waf_agent_multi_secrets: per-profile secret references (token files)
+#   - profile_name: string
+# cp_waf_agent_multi_secrets: []
+
+# cp_waf_agent_multi_resources: per-profile Docker resource limits
+#   - profile_name: string
+#     cpu: string
+#     mem: string
+# cp_waf_agent_multi_resources: []
+
+# cp_waf_agent_multi_network: bridge network config shared by all
+# multi-agent containers
+# cp_waf_agent_multi_network:
+#   subnet: "172.20.0.0/16"
+#   gateway: "172.20.0.1"

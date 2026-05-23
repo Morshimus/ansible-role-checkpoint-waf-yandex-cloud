@@ -26,7 +26,7 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 | `path_cp_agent_waf_logs` | `{{ path_backend_config }}/Logs` | Agent log directory |
 | `docker_registry_url` | `docker.io` | Docker registry URL |
 | `docker_registry_folder` | `checkpoint` | Registry namespace/folder |
-| `docker_cp_agent_image` | `cloudguard-appsec-standalone:1185074` | WAF agent image name and tag |
+| `docker_cp_agent_image` | `cloudguard-appsec-standalone:1567986` | WAF agent image name and tag |
 | `docker_full_image_path` | `{{ docker_registry_url }}/{{ docker_registry_folder }}/{{ docker_cp_agent_image }}` | Full image reference (computed) |
 | `use_yandex_container_registry` | `false` | Pull image from Yandex Container Registry using IAM token |
 | `gaddr` | `169.254.169.254` | Yandex metadata service address |
@@ -213,7 +213,7 @@ With Yandex Container Registry and full nginx config:
     use_yandex_container_registry: true
     docker_registry_url: "cr.yandex"
     docker_registry_folder: "crp8cgfah9nqgde7q9rm/checkpoint"
-    docker_cp_agent_image: "cloudguard-appsec-standalone:1185074"
+    docker_cp_agent_image: "cloudguard-appsec-standalone:1567986"
 
     cp_waf_agent_cpu_limits: "2.6"
     cp_waf_agent_mem_limits: "1GB"
@@ -271,7 +271,8 @@ yandex_cloud_token_static: "your-yc-iam-token-here"  # for molecule/testing only
 | Tag | Description |
 |---|---|
 | `docker` | Run only Docker installation tasks |
-| `checkpoint_waf_agent` | Run only WAF agent installation tasks |
+| `checkpoint_waf_agent` | Run only single-agent WAF installation tasks |
+| `checkpoint_waf_multi_agent` | Run only multi-agent WAF installation tasks |
 
 ---
 
@@ -386,3 +387,161 @@ The `diffusion.lock` file is auto-generated — do not edit it manually.
 6. Open a pull request with a clear description of what changed and why.
 
 Linting rules (yamllint + ansible-lint) are defined in `diffusion.toml` and enforced by CI automatically.
+
+---
+
+## Multi-Agent Mode (`checkpoint_waf_multi_agent`)
+
+Multi-agent mode deploys **multiple WAF profiles** on a single host, each running as an independent Docker container with its own directories, token, nginx config, ports, and certificate crawler.
+
+Enable it by setting `checkpoint_waf_multi_agent: true` in your vars and providing the profile lists described below.
+
+### How it works
+
+- A **single `docker-compose.yml`** (rendered from `docker-compose-multi.yml.j2`) is deployed, containing one service per profile.
+- Each profile gets its own subdirectory tree under `path_backend_config`:
+  ```
+  /opt/CloudGuard/WAF/
+  ├── AgentConfiguration/<profile>/
+  ├── NginxConfiguration/<profile>/
+  ├── Certs/<profile>/
+  ├── Data/<profile>/
+  ├── Logs/<profile>/
+  └── secrets/<profile>/.CP_WAF_AGENT_TOKEN
+  ```
+- A **per-profile systemd cert crawler service + timer** is installed for each profile.
+- Each profile gets its own **`checkpoint_waf_agent_docker_<profile>.service`** systemd unit managing its docker-compose stack (start/stop/restart per profile independently).
+
+### Required Variables
+
+#### `cp_waf_agent_multi_services`
+One entry per profile. Controls the profile identifier and port mappings used in the docker-compose stack.
+
+```yaml
+cp_waf_agent_multi_services:
+  - profile_name: profile1      # unique identifier — used in dir names, container names
+    https_port: 8443            # host port → container 443
+    http_port: 8080             # host port → container 80
+    health_port: 8117           # host port → container 8117 (nano-agent health)
+  - profile_name: profile2
+    https_port: 9443
+    http_port: 9080
+    health_port: 9117
+```
+
+#### `cp_waf_agent_multi_images`
+Image families referenced by `cp_waf_agent_multi_envs`. Typically one entry unless profiles use different WAF builds. All fields except `family_name` are optional and fall back to the corresponding role defaults.
+
+```yaml
+cp_waf_agent_multi_images:
+  - family_name: default          # referenced by cp_waf_agent_multi_envs[].image_family
+    # Optional overrides (fall back to role defaults when omitted):
+    # registry_url: "cr.yandex"
+    # registry_folder: "crp8cgfah9nqgde7q9rm/checkpoint"
+    # cp_agent_image: "cloudguard-appsec-standalone:1567986"
+```
+
+#### `cp_waf_agent_multi_envs`
+Per-profile environment config. `profile_name` must match an entry in `cp_waf_agent_multi_services`.
+
+```yaml
+cp_waf_agent_multi_envs:
+  - profile_name: profile1
+    image_family: default
+    yc_certificates_ids:        # Yandex CM certificate IDs for this profile
+      - cert-xxxx-1
+  - profile_name: profile2
+    image_family: default
+    yc_certificates_ids: []
+```
+
+#### `cp_waf_agent_multi_secrets`
+Declares per-profile token files written to `secrets/<profile>/.CP_WAF_AGENT_TOKEN`. Each entry must include both the `profile_name` and the `secret` — the Check Point WAF agent registration token for that profile.
+
+```yaml
+cp_waf_agent_multi_secrets:
+  - profile_name: profile1
+    secret: "your-checkpoint-token-for-profile1"
+  - profile_name: profile2
+    secret: "your-checkpoint-token-for-profile2"
+```
+
+#### `cp_waf_agent_multi_resources`
+Per-profile Docker resource limits. If omitted for a profile, compose defaults apply.
+
+```yaml
+cp_waf_agent_multi_resources:
+  - profile_name: profile1
+    cpu: "2.6"
+    mem: "1GB"
+  - profile_name: profile2
+    cpu: "2.0"
+    mem: "1GB"
+```
+
+#### `cp_waf_agent_multi_network`
+Shared Docker bridge network for all profile containers.
+
+```yaml
+cp_waf_agent_multi_network:
+  subnet: "172.20.0.0/16"
+  gateway: "172.20.0.1"
+```
+
+### Example Play
+
+```yaml
+- hosts: waf_hosts
+  vars:
+    checkpoint_waf_multi_agent: true
+    cp_waf_agent_multi_network:
+      subnet: "172.20.0.0/16"
+      gateway: "172.20.0.1"
+    cp_waf_agent_multi_images:
+      - family_name: default
+    cp_waf_agent_multi_services:
+      - profile_name: app_a
+        https_port: 8443
+        http_port: 8080
+        health_port: 8117
+      - profile_name: app_b
+        https_port: 9443
+        http_port: 9080
+        health_port: 9117
+    cp_waf_agent_multi_envs:
+      - profile_name: app_a
+        image_family: default
+        yc_certificates_ids:
+          - cert-xxxx-app-a
+      - profile_name: app_b
+        image_family: default
+        yc_certificates_ids: []
+    cp_waf_agent_multi_secrets:
+      - profile_name: app_a
+        secret: "your-checkpoint-token-for-app-a"
+      - profile_name: app_b
+        secret: "your-checkpoint-token-for-app-b"
+    cp_waf_agent_multi_resources:
+      - profile_name: app_a
+        cpu: "2.6"
+        mem: "1GB"
+      - profile_name: app_b
+        cpu: "2.0"
+        mem: "1GB"
+  roles:
+    - checkpoint_waf_agent
+```
+
+### Molecule Test Scenario
+
+A dedicated molecule scenario exists at `scenarios/multi/`. It deploys two profiles (`profile1` on ports 8443/8080/8117, `profile2` on ports 9443/9080/9117) and verifies that all six ports are listening and both containers are running.
+
+```bash
+# Run the multi-agent scenario
+diffusion molecule --scenario multi
+
+# Or step by step
+diffusion molecule --scenario multi --converge
+diffusion molecule --scenario multi --verify
+diffusion molecule --scenario multi --idempotence
+```

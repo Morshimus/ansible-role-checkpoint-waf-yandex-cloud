@@ -1,0 +1,42 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Verify service ports for profile1
+      ansible.builtin.include_role:
+        name: tests/diffusion_tests
+      vars:
+        verify_ports:
+          - port: 8443
+            description: "profile1 HTTPS port"
+          - port: 8080
+            description: "profile1 HTTP port"
+          - port: 8117
+            description: "profile1 Checkpoint nano agent health port"
+
+    - name: Verify service ports for profile2
+      ansible.builtin.include_role:
+        name: tests/diffusion_tests
+      vars:
+        verify_ports:
+          - port: 9443
+            description: "profile2 HTTPS port"
+          - port: 9080
+            description: "profile2 HTTP port"
+          - port: 9117
+            description: "profile2 Checkpoint nano agent health port"
+
+    - name: Test Docker containers for both profiles
+      ansible.builtin.include_role:
+        name: tests/diffusion_tests
+      vars:
+        docker_user: "docker-adm"
+        verify_docker_containers:
+          - name: "cp_waf_agent_profile1"
+            state: "running"
+            image: "docker.io/checkpoint/cloudguard-appsec-standalone:1567986"
+          - name: "cp_waf_agent_profile2"
+            state: "running"
+            image: "docker.io/checkpoint/cloudguard-appsec-standalone:latest"
