@@ -6,22 +6,30 @@
 # tokens, nginx configs, cert crawlers, and a shared systemd
 # service.
 # ============================================================
-
-# ---- Variable loading (mirrors checkpoint_waf_agent_install.yml pattern) ----
-
-- name: Include defaults from role path (production)
+#
+- name: Include all  in defaults and all nested directories
   ansible.builtin.include_vars:
-    dir: "{{ inventory_dir }}/roles/cp_waf_agent/defaults"
+    dir: "{{ inventory_dir }}/roles/{{ role_name }}/defaults"
     ignore_files:
       - ".terragrunt-source-manifest"
   when: molecule_yml is not defined
 
-- name: Include vars from inventory (production)
+- name: Include all  in vars and all nested directories
   ansible.builtin.include_vars:
     dir: "{{ inventory_dir }}/vars"
     ignore_files:
       - ".terragrunt-source-manifest"
   when: molecule_yml is not defined
+
+- name: Include all  in vars and all nested directories MOLECULE
+  ansible.builtin.include_vars:
+    dir: "{{ playbook_dir }}/../../vars"
+  when: molecule_yml is defined
+
+- name: Include all  in defaults and all nested directories MOLECULE
+  ansible.builtin.include_vars:
+    dir: "{{ playbook_dir }}/../../defaults"
+  when: molecule_yml is defined
 
 # ---- System prerequisites ----
 
@@ -104,7 +112,7 @@
     mode: "0755"
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
-  notify: restart-cp-waf-agent-docker
+  notify: restart-cp-waf-agent-multi-docker
 
 # ---- Per-profile directory trees ----
 
@@ -115,7 +123,7 @@
     mode: "0755"
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
-  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop: "{{ cp_waf_agent_multi_services }}"
   loop_control:
     label: "{{ item.profile_name }}"
 
@@ -126,7 +134,7 @@
     mode: "0755"
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
-  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop: "{{ cp_waf_agent_multi_services }}"
   loop_control:
     label: "{{ item.profile_name }}"
 
@@ -137,7 +145,7 @@
     mode: "0755"
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
-  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop: "{{ cp_waf_agent_multi_services }}"
   loop_control:
     label: "{{ item.profile_name }}"
 
@@ -148,7 +156,7 @@
     mode: "0755"
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
-  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop: "{{ cp_waf_agent_multi_services }}"
   loop_control:
     label: "{{ item.profile_name }}"
 
@@ -159,7 +167,7 @@
     mode: "0755"
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
-  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop: "{{ cp_waf_agent_multi_services }}"
   loop_control:
     label: "{{ item.profile_name }}"
 
@@ -170,7 +178,7 @@
     mode: "0754"
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
-  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop: "{{ cp_waf_agent_multi_services }}"
   loop_control:
     label: "{{ item.profile_name }}"
 
@@ -179,9 +187,12 @@
 - name: Create per-profile CP_WAF_AGENT_TOKEN file
   become: true
   become_user: "{{ docker_user }}"
+  vars:
+    _sp: "{{ path_backend_config }}/secrets"
+    multi_secret: "{{ item.secret }}"
   ansible.builtin.template:
     src: .CP_WAF_AGENT_TOKEN.j2
-    dest: "{{ path_backend_config }}/secrets/{{ item.profile_name }}/.CP_WAF_AGENT_TOKEN"
+    dest: "{{ _sp }}/{{ item.profile_name }}/.CP_WAF_AGENT_TOKEN"
     backup: true
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
@@ -189,39 +200,43 @@
   loop: "{{ cp_waf_agent_multi_secrets }}"
   loop_control:
     label: "{{ item.profile_name }}"
-  notify: restart-cp-waf-agent-docker
+  notify: restart-cp-waf-agent-multi-docker
 
 # ---- Per-profile nginx configs ----
 
 - name: Create per-profile nginx upstream configuration
   become: true
   become_user: "{{ docker_user }}"
+  vars:
+    _pn: "{{ path_backend_config }}/NginxConfiguration"
   ansible.builtin.template:
     src: nginx_upstreams.conf.j2
-    dest: "{{ path_backend_config }}/NginxConfiguration/{{ item.profile_name }}/upstreams.conf"
+    dest: "{{ _pn }}/{{ item.profile_name }}/upstreams.conf"
     backup: true
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
     mode: "0777"
-  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop: "{{ cp_waf_agent_multi_services }}"
   loop_control:
     label: "{{ item.profile_name }}"
-  notify: restart-cp-waf-agent-docker
+  notify: restart-cp-waf-agent-multi-docker
 
 - name: Create per-profile nginx limit configuration
   become: true
   become_user: "{{ docker_user }}"
+  vars:
+    _pn: "{{ path_backend_config }}/NginxConfiguration"
   ansible.builtin.template:
     src: nginx_limits.conf.j2
-    dest: "{{ path_backend_config }}/NginxConfiguration/{{ item.profile_name }}/limits.conf"
+    dest: "{{ _pn }}/{{ item.profile_name }}/limits.conf"
     backup: true
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
     mode: "0777"
-  loop: "{{ cp_waf_agent_multi_volumes }}"
+  loop: "{{ cp_waf_agent_multi_services }}"
   loop_control:
     label: "{{ item.profile_name }}"
-  notify: restart-cp-waf-agent-docker
+  notify: restart-cp-waf-agent-multi-docker
 
 # ---- Multi-agent .env and docker-compose ----
 
@@ -235,7 +250,7 @@
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
     mode: "0600"
-  notify: restart-cp-waf-agent-docker
+  notify: restart-cp-waf-agent-multi-docker
 
 - name: Deploy docker-compose-multi.yml template
   become: true
@@ -247,7 +262,7 @@
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
     mode: "0777"
-  notify: restart-cp-waf-agent-docker
+  notify: restart-cp-waf-agent-multi-docker
 
 - name: Copy registration_cmd.sh file
   become: true
@@ -259,7 +274,7 @@
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
     mode: a+x
-  notify: restart-cp-waf-agent-docker
+  notify: restart-cp-waf-agent-multi-docker
 
 # ---- Pull images ----
 
@@ -267,12 +282,14 @@
   become: true
   become_user: "{{ docker_user }}"
   environment:
+    COMPOSE_PROFILES: "{{ item.profile_name }}"
     XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
     DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
     PATH: >
       /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
   community.docker.docker_compose_v2_pull:
     project_src: "{{ path_backend_config }}"
+  loop: "{{ cp_waf_agent_multi_services }}"
   register: docker_pull_result
   retries: 3
   delay: 10
@@ -281,12 +298,17 @@
 # ---- Systemd service for docker-compose ----
 
 - name: Create systemd service for docker-compose (multi-agent)
+  vars:
+    multi_profile: "{{ item.profile_name }}"
   ansible.builtin.template:
     src: cp_waf_agent.service.j2
-    dest: /etc/systemd/system/checkpoint_waf_agent_docker.service
+    dest: >-
+      /etc/systemd/system/checkpoint_waf_agent_docker_{{
+      item.profile_name }}.service
     backup: true
     mode: "0600"
   notify: daemon-reload
+  loop: "{{ cp_waf_agent_multi_services }}"
 
 # ---- Yandex certificate crawler (per profile) ----
 
@@ -314,10 +336,12 @@
 - name: Install per-profile systemd service for yandex certificate crawler
   ansible.builtin.template:
     src: yandex_certificate_crawler_profile.service.j2
-    dest: "/etc/systemd/system/yandex_certificate_crawler_{{ item.profile_name }}.service"
+    dest: >-
+      {{ _sd }}/yandex_certificate_crawler_{{ item.profile_name }}.service
     backup: true
     mode: "0600"
   vars:
+    _sd: /etc/systemd/system
     profile_name: "{{ item.profile_name }}"
     profile_yc_certificates_ids: "{{ item.yc_certificates_ids | default([]) }}"
   loop: "{{ cp_waf_agent_multi_envs }}"
@@ -328,10 +352,12 @@
 - name: Install per-profile systemd timer for yandex certificate crawler
   ansible.builtin.template:
     src: yandex_certificate_crawler_profile.timer.j2
-    dest: "/etc/systemd/system/yandex_certificate_crawler_{{ item.profile_name }}.timer"
+    dest: >-
+      {{ _sd }}/yandex_certificate_crawler_{{ item.profile_name }}.timer
     backup: true
     mode: "0600"
   vars:
+    _sd: /etc/systemd/system
     profile_name: "{{ item.profile_name }}"
   loop: "{{ cp_waf_agent_multi_envs }}"
   loop_control:

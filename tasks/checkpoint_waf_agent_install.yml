@@ -1,7 +1,7 @@
 ---
 - name: Include all  in defaults and all nested directories
   ansible.builtin.include_vars:
-    dir: "{{ inventory_dir }}/roles/cp_waf_agent/defaults"
+    dir: "{{ inventory_dir }}/roles/{{ role_name }}/defaults"
     ignore_files:
       - ".terragrunt-source-manifest"
   when: molecule_yml is not defined
@@ -15,14 +15,12 @@
 
 - name: Include all  in vars and all nested directories MOLECULE
   ansible.builtin.include_vars:
-    dir: "{{ playbook_dir }}/../../defaults"
+    dir: "{{ playbook_dir }}/../../vars"
   when: molecule_yml is defined
 
-- name: Include all  in vars and all nested directories MOLECULE
+- name: Include all  in defaults and all nested directories MOLECULE
   ansible.builtin.include_vars:
-    dir: "{{ playbook_dir }}/../../vars"
-    ignore_files:
-      - ".terragrunt-source-manifest"
+    dir: "{{ playbook_dir }}/../../defaults"
   when: molecule_yml is defined
 
 - name: Install jq for yandex crawler service

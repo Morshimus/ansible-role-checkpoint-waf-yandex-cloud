@@ -8,7 +8,14 @@
       gateway: "172.20.0.1"
     cp_waf_agent_multi_images:
       - family_name: default
-    cp_waf_agent_multi_volumes:
+        registry_url: docker.io
+        registry_folder: checkpoint
+        cp_agent_image: cloudguard-appsec-standalone:1567986
+      - family_name: latest
+        registry_url: docker.io
+        registry_folder: checkpoint
+        cp_agent_image: cloudguard-appsec-standalone:latest
+    cp_waf_agent_multi_services:
       - profile_name: profile1
         https_port: 8443
         http_port: 8080
@@ -22,11 +29,13 @@
         image_family: default
         yc_certificates_ids: []
       - profile_name: profile2
-        image_family: default
+        image_family: latest
         yc_certificates_ids: []
     cp_waf_agent_multi_secrets:
       - profile_name: profile1
+        secret: dummy-xxx-xxx-1
       - profile_name: profile2
+        secret: dummy-xxx-xxx-2
     cp_waf_agent_multi_resources:
       - profile_name: profile1
         cpu: "2.0"

@@ -1,7 +1,7 @@
 ---
 - name: Include all  in defaults and all nested directories
   ansible.builtin.include_vars:
-    dir: "{{ inventory_dir }}/roles/cp_waf_agent/defaults"
+    dir: "{{ inventory_dir }}/roles/{{ role_name }}/defaults"
     ignore_files:
       - ".terragrunt-source-manifest"
   when: molecule_yml is not defined
@@ -22,18 +22,6 @@
   ansible.builtin.include_vars:
     dir: "{{ playbook_dir }}/../../defaults"
   when: molecule_yml is defined
-
-- name: Install iptables and sudo MOLECULE
-  ansible.builtin.apt:
-    pkg:
-      - iptables
-      - sudo
-    state: present
-    update_cache: true
-  when: >
-    (ansible_distribution == 'Ubuntu' or
-    ansible_distribution == 'Debian') and
-    molecule_yml is defined
 
 - name: Add Docker user
   become: true

@@ -5,17 +5,17 @@
 PATH_BACKEND_CONFIG="{{ path_backend_config | trim }}"
 
 # Per-profile paths
-{% for volume in cp_waf_agent_multi_volumes %}
-PATH_CP_AGENT_WAF_CERTS_{{ volume.profile_name | upper }}="{{ path_backend_config }}/Certs/{{ volume.profile_name }}"
-PATH_CP_AGENT_WAF_CONFIGURATION_{{ volume.profile_name | upper }}="{{ path_backend_config }}/AgentConfiguration/{{ volume.profile_name }}"
-PATH_CP_NGINX_CONFIGURATION_{{ volume.profile_name | upper }}="{{ path_backend_config }}/NginxConfiguration/{{ volume.profile_name }}"
-PATH_CP_AGENT_WAF_DATA_{{ volume.profile_name | upper }}="{{ path_backend_config }}/Data/{{ volume.profile_name }}"
-PATH_CP_AGENT_WAF_LOGS_{{ volume.profile_name | upper }}="{{ path_backend_config }}/Logs/{{ volume.profile_name }}"
+{% for service in cp_waf_agent_multi_services %}
+PATH_CP_AGENT_WAF_CERTS_{{ service.profile_name | upper }}="{{ path_backend_config }}/Certs/{{ service.profile_name }}"
+PATH_CP_AGENT_WAF_CONFIGURATION_{{ service.profile_name | upper }}="{{ path_backend_config }}/AgentConfiguration/{{ service.profile_name }}"
+PATH_CP_NGINX_CONFIGURATION_{{ service.profile_name | upper }}="{{ path_backend_config }}/NginxConfiguration/{{ service.profile_name }}"
+PATH_CP_AGENT_WAF_DATA_{{ service.profile_name | upper }}="{{ path_backend_config }}/Data/{{ service.profile_name }}"
+PATH_CP_AGENT_WAF_LOGS_{{ service.profile_name | upper }}="{{ path_backend_config }}/Logs/{{ service.profile_name }}"
 {% endfor %}
 
 # Container images (per image family)
 {% for image in cp_waf_agent_multi_images %}
-CP_WAF_AGENT_IMG_{{ image.family_name | upper }}="{{ docker_registry_url }}/{{ docker_registry_folder }}/{{ docker_cp_agent_image }}"
+CP_WAF_AGENT_IMG_{{ image.family_name | upper }}="{{ image.registry_url | default(docker_registry_url) }}/{{  image.registry_folder | default(docker_registry_folder) }}/{{ image.cp_agent_image | default(docker_cp_agent_image) }}"
 {% endfor %}
 
 # Resource limits (per profile)

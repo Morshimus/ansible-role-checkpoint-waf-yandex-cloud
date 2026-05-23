@@ -1,6 +1,10 @@
 
 [Unit]
+{% if checkpoint_waf_multi_agent is defined and checkpoint_waf_multi_agent -%}
+Description=Chekpoint WAF agent linru service with docker-compose for profile {{ multi_profile }}
+{% else -%}
 Description=Chekpoint WAF agent linru service with docker-compose
+{% endif -%}
 StartLimitBurst=10
 StartLimitIntervalSec=90
 
@@ -9,6 +13,9 @@ Delegate=cpu cpuset io memory pids
 Environment="XDG_RUNTIME_DIR=/run/user/{{ docker_user_info.uid }}"
 Environment="DOCKER_HOST=unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
 Environment="PATH=/home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH"
+{% if checkpoint_waf_multi_agent is defined and checkpoint_waf_multi_agent -%}
+Environment="COMPOSE_PROFILES={{ multi_profile }}"
+{% endif -%}
 Restart=always
 User={{ docker_user }}
 Group={{ docker_user }}

@@ -10,3 +10,11 @@
     name: checkpoint_waf_agent_docker
     enabled: true
     state: restarted
+
+- name: Restart Checkpoint WAF Agent Docker Compose service Multi
+  listen: restart-cp-waf-agent-multi-docker
+  ansible.builtin.service:
+    name: checkpoint_waf_agent_docker_{{ item.profile_name }}
+    enabled: true
+    state: restarted
+  loop: "{{ cp_waf_agent_multi_services }}"
