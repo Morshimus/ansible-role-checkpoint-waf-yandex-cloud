@@ -3,7 +3,7 @@ name: Scheduled Update
 
 on:
   schedule:
-    - cron: '0 7 * * 1'
+    - cron: "0 7 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -14,23 +14,26 @@ jobs:
   update:
     name: Update Dependencies
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - scenario: default
+          - scenario: multi
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Diffusion Update
+      - name: Run Diffusion Update for Scenario ${{ matrix.scenario }}
         uses: Polar-Team/diffusion/diffusion-update@main
         with:
-          target-branch: 'main'
-          diffusion-version: 'latest'
-          run-lint: 'true'
-          run-verify: 'true'
-          run-idempotence: 'true'
-          cache-enabled: 'true'
-          cache-uv: 'true'
-          cache-docker: 'true'
-          pr-title: 'chore(deps): update diffusion dependencies'
-          pr-labels: ''
+          target-branch: "main"
+          diffusion-version: "latest"
+          scenario: "${{ matrix.scenario }}"
+          run-lint: "true"
+          run-verify: "true"
+          run-idempotence: "true"
+          pr-title: "chore(deps): update diffusion dependencies"
+          pr-labels: ""
 
       - name: Update README.md versions from diffusion.lock
         run: |

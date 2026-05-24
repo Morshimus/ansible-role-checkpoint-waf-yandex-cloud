@@ -5,22 +5,27 @@ on:
   pull_request:
   workflow_dispatch:
 
-
 jobs:
   test:
     name: Molecule Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - scenario: default
+          - scenario: multi
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Diffusion Tests
+      - name: Run Diffusion Tests for Scenario ${{ matrix.scenario }}
         uses: Polar-Team/diffusion/diffusion-test@main
         with:
-          diffusion-version: 'latest'
-          run-lint: 'true'
-          run-verify: 'true'
-          run-idempotence: 'true'
-          cache-enabled: 'true'
-          cache-uv: 'true'
-          cache-docker: 'true'
+          diffusion-version: "latest"
+          scenario: "${{ matrix.scenario }}"
+          run-lint: "true"
+          run-verify: "true"
+          run-idempotence: "true"
+          cache-enabled: "true"
+          cache-uv: "true"
+          cache-docker: "true"
