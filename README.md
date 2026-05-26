@@ -330,7 +330,7 @@ Current `diffusion.toml` settings for this role:
 | ansible-lint | `>=24.0.0` → resolved `26.4.0` |
 | molecule | `>=24.0.0` → resolved `26.4.0` |
 | yamllint | `>=1.35.0` → resolved `1.38.0` |
-| `community.general` | `>=12.2.0` → resolved `13.0.0` |
+| `community.general` | `>=12.2.0` → resolved `13.0.1` |
 | `community.docker` | `>=5.0.6` → resolved `5.2.0` |
 | `konstruktoid.docker_rootless` | `>=1.13.0` → resolved `v1.22.0` |
 | Tests | Diffusion (`type = "diffusion"`) |
