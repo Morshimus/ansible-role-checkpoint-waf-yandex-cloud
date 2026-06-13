@@ -10,7 +10,7 @@
       - family_name: default
         registry_url: docker.io
         registry_folder: checkpoint
-        cp_agent_image: cloudguard-appsec-standalone:1567986
+        cp_agent_image: cloudguard-appsec-standalone:1580296
       - family_name: latest
         registry_url: docker.io
         registry_folder: checkpoint
