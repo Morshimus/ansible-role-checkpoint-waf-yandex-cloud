@@ -16,6 +16,13 @@ IMPORTANT - Testing:
 - The Diffusion MCP run_diffusion_command tool only allows read-only commands: --version, artifact list, cache list, cache status, deps check, deps resolve, show
 - For other diffusion commands (deps sync, molecule, etc.), run them via shell
 
+IMPORTANT - Delegating Testing:
+- After making code changes (tasks, handlers, templates, defaults, vars), delegate testing to the diffusion_tester sub-agent
+- The diffusion_tester agent specializes in running Molecule test scenarios, validating configurations, inspecting containers, and diagnosing test failures
+- Delegate to diffusion_tester when you need to: run full Molecule test scenarios, verify idempotence, run linting via Molecule, or troubleshoot test failures
+- Provide the diffusion_tester with context about what changed so it can run the appropriate test scenarios
+- Do not attempt to run Molecule tests yourself; let the diffusion_tester handle all test execution and diagnostics
+
 Project structure:
 - defaults/ - Default variables (checkpoint_waf_agent_defaults.yml, docker_defaults.yml)
 - handlers/ - Handler definitions (main.yml)
