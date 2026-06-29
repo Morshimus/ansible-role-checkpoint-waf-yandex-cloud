@@ -1,20 +1,80 @@
 {
   "name": "ansible-specialist",
-  "description": "Specialized agent for writing, reviewing, and refactoring Ansible roles, tasks, handlers, templates, and variables. Follows Ansible best practices and ensures idempotent, well-structured automation code.",
-  "systemPrompt": "You are an Ansible specialist. Your job is to write, review, refactor, and troubleshoot Ansible roles including tasks, handlers, templates (Jinja2), variables, defaults, and meta files. Follow Ansible best practices: use FQCN (fully qualified collection names), ensure idempotency, use handlers for service restarts, leverage variables and defaults properly, and keep tasks focused and well-named. When reviewing code, check for common issues like missing 'become', incorrect module usage, unquoted YAML values, missing handlers, and template syntax errors. For this repository specifically, the role manages Check Point WAF agent and Docker installation. Always read existing code before making changes to match the project's conventions.",
+  "description": "Ansible role specialist for writing, reviewing, and refactoring tasks, handlers, templates, variables, defaults, and meta files. Manages the Check Point WAF agent and Docker installation role following Ansible best practices.",
+  "promptFile": "./ansible-specialist.prompt.md",
   "tools": [
-    "readFile",
-    "readMultipleFiles",
-    "readCode",
-    "fsWrite",
-    "strReplace",
-    "grepSearch",
-    "fileSearch",
-    "listDirectory",
-    "getDiagnostics",
-    "executePwsh",
-    "remote_web_search",
-    "webFetch",
-    "mcp_fetch_fetch"
-  ]
+    "read",
+    "write",
+    "shell"
+  ],
+  "allowedTools": [
+    "read"
+  ],
+  "toolsSettings": {
+    "write": {
+      "allowedPaths": [
+        "tasks/**",
+        "defaults/**",
+        "handlers/**",
+        "templates/**",
+        "vars/**",
+        "meta/**",
+        "files/**"
+      ]
+    },
+    "shell": {
+      "allowedCommands": [
+        "ansible-lint",
+        "ansible-lint .",
+        "yamllint .",
+        "yamllint tasks/",
+        "yamllint defaults/",
+        "yamllint handlers/",
+        "yamllint vars/",
+        "yamllint meta/",
+        "ansible-playbook --syntax-check",
+        "diffusion deps check",
+        "diffusion deps resolve",
+        "diffusion deps sync",
+        "diffusion show",
+        "diffusion --version",
+        "diffusion role add-collection",
+        "diffusion role remove-collection",
+        "diffusion role add-role",
+        "diffusion role remove-role",
+        "git status",
+        "git log --oneline -10",
+        "git branch",
+        "git diff --name-only",
+        "git diff --stat"
+      ]
+    }
+  },
+  "resources": [
+    "file://tasks/**",
+    "file://defaults/**",
+    "file://handlers/**",
+    "file://templates/**",
+    "file://vars/**",
+    "file://meta/main.yml",
+    "file://files/**",
+    "file://diffusion.toml",
+    "file://diffusion.lock",
+    "file://scenarios/*/molecule.yml",
+    "file://scenarios/*/verify.yml"
+  ],
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "git status --porcelain",
+        "timeout_ms": 5000
+      },
+      {
+        "command": "git branch --show-current",
+        "timeout_ms": 5000
+      }
+    ]
+  },
+  "model": "claude-sonnet-4",
+  "welcomeMessage": "Ansible Specialist ready. I can help write, review, and refactor role tasks, handlers, templates, variables, and defaults. What do you need?"
 }
