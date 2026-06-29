@@ -24,6 +24,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Diffusion Update for Scenario ${{ matrix.scenario }}
+        id: diffusion-update
+        continue-on-error: true
         uses: Polar-Team/diffusion/diffusion-update@main
         with:
           target-branch: "main"
@@ -36,6 +38,7 @@ jobs:
           pr-labels: ""
 
       - name: Update README.md versions from diffusion.lock
+        if: steps.diffusion-update.outcome == 'success'
         run: |
           # Find the branch created by diffusion-update (most recent remote branch
           # matching the diffusion update pattern, or fall back to current HEAD).
