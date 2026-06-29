@@ -75,6 +75,9 @@
       }
     ]
   },
+  "subAgents": [
+    "diffusion_tester"
+  ],
   "model": "claude-sonnet-4",
   "welcomeMessage": "Ansible Specialist ready. I can help write, review, and refactor role tasks, handlers, templates, variables, and defaults. What do you need?"
 }
