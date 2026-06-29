@@ -15,6 +15,13 @@
     "executePwsh",
     "remote_web_search",
     "webFetch",
-    "mcp_fetch_fetch"
+    "mcp_fetch_fetch",
+    "mcp_diffusion_get_diffusion_config",
+    "mcp_diffusion_get_lock_file",
+    "mcp_diffusion_get_diffusion_cli_reference",
+    "mcp_diffusion_get_server_version",
+    "mcp_diffusion_get_requirements_yml",
+    "mcp_diffusion_run_diffusion_command",
+    "mcp_diffusion_check_docker_environment"
   ]
 }
