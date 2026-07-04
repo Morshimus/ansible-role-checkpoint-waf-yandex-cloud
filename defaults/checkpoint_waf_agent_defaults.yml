@@ -1,25 +1,69 @@
 ---
+#-| string
 path_backend_config: "/opt/CloudGuard/WAF"
-yandex_cloud_token: "fakekey"
-docker_registry_url: "docker.io"
-gaddr: "169.254.169.254"
-gpath: "computeMetadata/v1/instance/service-accounts"
-iam_link: "http://{{ gaddr }}/{{ gpath }}/default/token"
-path_cp_agent_waf_data: "{{ path_backend_config }}/Data"
-path_cp_agent_waf_certs: "{{ path_backend_config }}/Certs"
-path_cp_agent_waf_configuration: "{{ path_backend_config }}/AgentConfiguration"
-path_cp_nginx_configuration: "{{ path_backend_config }}/NginxConfiguration"
-path_cp_agent_waf_logs: "{{ path_backend_config }}/Logs"
-use_yandex_container_registry: false
+#-? Path to docker-compose and config files
 
+#-| string
+yandex_cloud_token: "fakekey"
+#-? Yandex Cloud static token.
+
+#-| string
+docker_registry_url: "docker.io"
+#-? Docker registry name
+
+#-| string
+gaddr: "169.254.169.254"
+#-? Magic link accessable from VM instance.
+
+#-| string
+gpath: "computeMetadata/v1/instance/service-accounts"
+#-? Magic Link path to service account access token
+
+#-| string
+iam_link: "http://{{ gaddr }}/{{ gpath }}/default/token"
+#-? Full iam link. It could be resolved by gaddr and gpath automatically - as it's jinja2 shortage
+
+#-| string
+path_cp_agent_waf_data: "{{ path_backend_config }}/Data"
+#-? Path where Checkpoint CloudGuard agent will store data. It could be resolved by path_backend_config automatically to Data - as it's jinja2 shortage
+
+#-| string
+path_cp_agent_waf_certs: "{{ path_backend_config }}/Certs"
+#-? Path where Checkpoint CloudGuard agent will storre Certificates. It could be resolved by path_backend_config automatically to Certs - as it's jinja2 shortage
+
+#-| string
+path_cp_agent_waf_configuration: "{{ path_backend_config }}/AgentConfiguration"
+#-? Path where Agent Configuration will be stored.It could be resolved by path_backend_config automatically to AgentConfiguration - as it's jinja2 shortage
+
+#-| string
+path_cp_nginx_configuration: "{{ path_backend_config }}/NginxConfiguration"
+#-? Path where Nginx Configuration will be stored. It could be resolved by path_backend_config automatically to NginxConfiguration - as it's jinja2 shortage
+
+#-| string
+path_cp_agent_waf_logs: "{{ path_backend_config }}/Logs"
+#-? Path where Logs will be stored. It could be resolved by path_backend_config automatically to Logs - as it's jinja2 shortage
+
+#-| bool
+use_yandex_container_registry: false
+#-? Does it required to autentificate to Yandex Cloud registry by using Magic Link token of SA?
+
+#-| string
 docker_registry_folder: "checkpoint"
+#-? Docker registry folder name.
+
+#-| string
 docker_cp_agent_image: "cloudguard-appsec-standalone:1580296"
+#-? Image name with tag.
+
+#-| string
 docker_full_image_path: >-
   {{
      docker_registry_url + "/" +
      docker_registry_folder +
      "/" + docker_cp_agent_image
   }}
+
+#-? Full docker image pull path. It could be resolved by docker_registry_folder, docker_cp_agent_image and docker_registry_url - as it's jinja2 shortage
 
 # Multi-agent profile definitions
 # cp_waf_agent_multi_services: list of profiles with port mappings

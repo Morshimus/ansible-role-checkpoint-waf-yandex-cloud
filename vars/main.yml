@@ -1,7 +1,7 @@
 ---
 cp_waf_agent_authorization_token: dummy-xxxx-xxx-xxx
-use_yandex_container_registry: false
 yandex_cloud_token_static: dummy-xxxx-xxxx-xxx #
+
 
 # vars file for checkpoint_waf_agent
 #  Example:
