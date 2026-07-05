@@ -1,6 +1,8 @@
 ---
 - name: Converge
   hosts: all
+  vars:
+    cp_waf_agent_authorization_token: dummy-xxxx-xxx-xxx
   tasks:
     - name: "Include Ansible role"
       ansible.builtin.include_role:

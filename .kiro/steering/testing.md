@@ -63,6 +63,7 @@ Create commit description of new versions and tests summary, check if current br
 
 If you have task to create diffusion compatible variables follow the following workflow:
 
-1. Check MCP update_diffusion_docs tool - If there is untyped variables not in default folder files, create it in main.yml or fitting to meaning file - to make correct variables declaration use MCP.
+1. Check MCP update_diffusion_docs tool - If there is untyped variables not in default folder files, create it in main.yml or fitting to meaning file - to make correct variables declaration use MCP. If variable omitted and have declarion in jinja2 format it's optional, if declarion omitted fully in default it's probably required depending on context (name password, token etc.).
+Emtpy strings and empty lists\dicts is always be optional and declared as #-& <var name>. Is not mandatory to put all in main.yml file - it could be seperate files.
 2. Check MCP udpate_diffusion_docs tool again - and if popup not declared at default level variables go to 1.
 3. When all variables mentioned at default as primary source with type annotation, description, and required\optional flag - Run command diffusion docs - Check that README.md file was updated accordingly.

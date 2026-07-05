@@ -2,14 +2,55 @@
   "name": "diffusion_tester",
   "description": "Diffusion/Molecule testing specialist for running, validating, and troubleshooting Molecule test scenarios. Uses Diffusion MCP tools for test execution and diagnostics. Read-only access to role code.",
   "promptFile": "./diffusion_tester.prompt.md",
+  "mcpServers": {
+    "diffusion": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-v",
+        "/var/run/docker.sock:/var/run/docker.sock",
+        "-v",
+        "./:/project",
+        "ghcr.io/polar-team/diffusion-mcp-server:latest-amd64"
+      ],
+      "autoApprove": [
+        "get_diffusion_config",
+        "get_lock_file",
+        "get_diffusion_cli_reference",
+        "get_server_version",
+        "get_requirements_yml",
+        "list_molecule_containers",
+        "list_molecule_scenarios",
+        "check_molecule_yml",
+        "check_verify_yml",
+        "check_docker_environment",
+        "run_diffusion_command",
+        "docker_exec_in_molecule",
+        "docker_in_docker_in_molecule",
+        "update_diffusion_docs"
+      ]
+    }
+  },
   "tools": [
     "read",
-    "shell"
+    "shell",
+    "write",
+    "@diffusion"
   ],
   "allowedTools": [
-    "read"
+    "read",
+    "@diffusion"
   ],
   "toolsSettings": {
+    "write": {
+      "allowedPaths": [
+        "defaults/*",
+        "vars/*",
+        "diffusion.toml"
+      ]
+    },
     "shell": {
       "allowedCommands": [
         "diffusion molecule --lint",
@@ -93,11 +134,16 @@
         "timeout_ms": 5000
       },
       {
-        "command": "docker ps --format '{{.Names}}' 2>/dev/null || echo 'Docker not available'",
+        "command": "docker ps --format '{{.Names}}'",
         "timeout_ms": 10000
+      },
+      {
+        "command": "diffusion --version",
+        "timeout_ms": 5000
       }
     ]
   },
-  "model": "claude-sonnet-4",
+  "model": "claude-sonnet-5",
+  "keyboardShortcut": "shift+d",
   "welcomeMessage": "Diffusion Tester ready. I can run Molecule scenarios, validate configs, inspect containers, and diagnose test failures. What do you need tested?"
 }

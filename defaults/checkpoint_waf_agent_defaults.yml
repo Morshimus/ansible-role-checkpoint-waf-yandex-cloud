@@ -65,39 +65,72 @@ docker_full_image_path: >-
 
 #-? Full docker image pull path. It could be resolved by docker_registry_folder, docker_cp_agent_image and docker_registry_url - as it's jinja2 shortage
 
-# Multi-agent profile definitions
-# cp_waf_agent_multi_services: list of profiles with port mappings
-#   - profile_name: string
-#     https_port: int
-#     http_port: int
-#     health_port: int
-# cp_waf_agent_multi_services: []
+# Single-agent optional configuration variables
 
-# cp_waf_agent_multi_images: list of image families referenced by profiles
-#   - family_name: string
-#      registry_url: string
-#      registry_folder: string
-#      cp_agent_image: string
-# cp_waf_agent_multi_images: []
+#-| string
+#-& cp_waf_agent_cpu_limits
+#-? CPU limits for the WAF agent container (e.g., "2.6")
 
-# cp_waf_agent_multi_envs: per-profile environment and cert configuration
-#   - profile_name: string
-#     image_family: string
-#     yc_certificates_ids: []
-# cp_waf_agent_multi_envs: []
+#-| string
+#-& cp_waf_agent_mem_limits
+#-? Memory limits for the WAF agent container (e.g., "1GB")
 
-# cp_waf_agent_multi_secrets: per-profile secret references (token files)
-#   - profile_name: string
-# cp_waf_agent_multi_secrets: []
+#-| list
+#-& nginx_limits
+#-? List of nginx limit definitions for rate limiting and connection limiting
 
-# cp_waf_agent_multi_resources: per-profile Docker resource limits
-#   - profile_name: string
-#     cpu: string
-#     mem: string
-# cp_waf_agent_multi_resources: []
+#-| list
+#-& nginx_servers
+#-? List of nginx virtual server configurations with SSL and proxy settings
 
-# cp_waf_agent_multi_network: bridge network config shared by all
-# multi-agent containers
-# cp_waf_agent_multi_network:
-#   subnet: "172.20.0.0/16"
-#   gateway: "172.20.0.1"
+#-| list
+#-& nginx_certs
+#-? List of certificate content pairs to copy directly into certs directory. nginx_certs and yc_certificates_ids mutually explicit. nginx_certs and yc_certificates_ids mutually explicit.
+
+#-| list
+#-& yc_certificates_ids
+#-? List of Yandex Certificate Manager certificate IDs to fetch periodically
+
+#-| string
+#-& yandex_certificate_crawler_schedule
+#-? Systemd timer schedule for certificate crawler (e.g., "*-*-* 03:00:00"). Deafult is ""*-*-* 19:00:00".
+
+# Multi-agent mode configuration
+
+#-| bool
+#-& checkpoint_waf_multi_agent
+#-? Enable multi-agent mode to deploy multiple WAF profiles on a single host. Default is false.
+
+#-| dict
+#-& cp_waf_agent_multi_network
+#-? Docker bridge network configuration for multi-agent containers (subnet, gateway)
+
+#-| list
+#-& cp_waf_agent_multi_images
+#-? List of Docker image families with registry and image configuration per family
+
+#-| list
+#-& cp_waf_agent_multi_services
+#-? List of service profiles with port mappings and profile identifiers
+
+#-| list
+#-& cp_waf_agent_multi_envs
+#-? List of per-profile environment configurations with image family and certificate IDs
+
+#-| list
+#-& cp_waf_agent_multi_secrets
+#-? List of per-profile WAF agent tokens for registration with Check Point
+
+#-| list
+#-& cp_waf_agent_multi_resources
+#-? List of per-profile Docker resource limits (CPU and memory)
+
+# Required authentication variables
+
+#-| string
+#-! cp_waf_agent_authorization_token
+#-? Check Point WAF agent registration token (override with vault or secrets)
+
+#-| string
+yandex_cloud_token_static: "dummy-xxxx-xxxx-xxx"
+#-? Yandex Cloud static IAM token for testing (override with vault or secrets)

@@ -1,10 +1,14 @@
 ---
-cp_waf_agent_authorization_token: dummy-xxxx-xxx-xxx
-yandex_cloud_token_static: dummy-xxxx-xxxx-xxx #
-
-
 # vars file for checkpoint_waf_agent
-#  Example:
+# 
+# All default values are now defined in defaults/ files.
+# Use this file or vault-encrypted files for production overrides.
+#
+# Example overrides:
+# cp_waf_agent_authorization_token: "your-actual-checkpoint-token"
+# yandex_cloud_token_static: "your-actual-yandex-token"
+#
+# Example nginx_limits configuration:
 # cp_waf_agent_authorization_token: token - place to secrets
 #
 # nginx_limits:

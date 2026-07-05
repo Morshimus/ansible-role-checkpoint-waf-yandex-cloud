@@ -1,0 +1,84 @@
+{
+  "name": "devops-team-lead",
+  "description": "DevOps Team Lead and product expert for Check Point CloudGuard WAF. Owns architecture decisions, feature planning, and coordinates implementation through sub-agents. Deep knowledge of CloudGuard WAF product capabilities, deployment patterns on Yandex Cloud, and recommended configurations.",
+  "promptFile": "./devops-team-lead.prompt.md",
+  "tools": [
+    "read",
+    "shell",
+    "web_fetch",
+    "subagent"
+  ],
+  "allowedTools": [
+    "read"
+  ],
+  "toolsSettings": {
+    "web_fetch": {
+      "trusted": [
+        ".*checkpoint\\.com.*"
+      ]
+    },
+    "subagent": {
+      "trustedAgents": [
+        "ansible-specialist",
+        "diffusion_tester"
+      ],
+      "availableAgents": [
+        "ansible-specialist",
+        "diffusion_tester"
+      ]
+    },
+    "shell": {
+      "allowedCommands": [
+        "git status",
+        "git log --oneline -20",
+        "git log --oneline --all --graph -20",
+        "git branch",
+        "git branch -a",
+        "git diff --name-only",
+        "git diff --stat",
+        "git show --stat",
+        "diffusion show",
+        "diffusion --version",
+        "diffusion deps check",
+        "diffusion deps resolve",
+        "diffusion cache list",
+        "diffusion cache status",
+        "diffusion artifact list"
+      ]
+    }
+  },
+  "resources": [
+    "file://tasks/**",
+    "file://defaults/**",
+    "file://handlers/**",
+    "file://templates/**",
+    "file://vars/**",
+    "file://meta/main.yml",
+    "file://files/**",
+    "file://diffusion.toml",
+    "file://diffusion.lock",
+    "file://scenarios/*/molecule.yml",
+    "file://scenarios/*/verify.yml",
+    "file://scenarios/*/converge.yml",
+    "file://README.md",
+    "file://CHANGELOG.md"
+  ],
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "git status --porcelain",
+        "timeout_ms": 5000
+      },
+      {
+        "command": "git branch --show-current",
+        "timeout_ms": 5000
+      },
+      {
+        "command": "git log --oneline -5",
+        "timeout_ms": 5000
+      }
+    ]
+  },
+  "model": "claude-opus-4.8",
+  "welcomeMessage": "DevOps Team Lead online. I have full context on Check Point CloudGuard WAF, this role's architecture, and can coordinate implementation and testing through my team. What are we working on?"
+}
