@@ -379,3 +379,12 @@
   loop: "{{ cp_waf_agent_multi_envs }}"
   loop_control:
     label: "{{ item.profile_name }}"
+
+- name: Enable and start per-profile yandex crawler timers
+  ansible.builtin.systemd:
+    name: "yandex_certificate_crawler_{{ item.profile_name }}.timer"
+    enabled: true
+    state: started
+  loop: "{{ cp_waf_agent_multi_envs }}"
+  loop_control:
+    label: "{{ item.profile_name }}"
