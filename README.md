@@ -11,8 +11,6 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 - `jq` and `curl` on the target host (installed automatically in molecule runs)
 
 ---
-
-## Role Variables
 <!-- begin role_variables -->
 
 ## Role Variables

@@ -314,6 +314,12 @@
     state: started
   changed_when: false
 
+- name: Enable and start yandex crawler timer
+  ansible.builtin.systemd:
+    name: yandex_certificate_crawler.timer
+    enabled: true
+    state: started
+
 - name: Copy docker-compose file
   become: true
   become_user: "{{ docker_user }}"
