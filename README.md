@@ -17,7 +17,7 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 
 | Variable | Type | Default | Source | Description |
 |----------|------|---------|--------|-------------|
-| `checkpoint_waf_multi_agent` | bool | `false` | defaults/checkpoint_waf_agent_defaults.yml | Enable multi-agent mode to deploy multiple WAF profiles on a single host |
+| `checkpoint_waf_multi_agent` | bool | *optional* | defaults/checkpoint_waf_agent_defaults.yml | Enable multi-agent mode to deploy multiple WAF profiles on a single host. Default is false. |
 | `cp_waf_agent_authorization_token` | string | **required** | defaults/checkpoint_waf_agent_defaults.yml | Check Point WAF agent registration token (override with vault or secrets) |
 | `cp_waf_agent_cpu_limits` | string | *optional* | defaults/checkpoint_waf_agent_defaults.yml | CPU limits for the WAF agent container (e.g., "2.6") |
 | `cp_waf_agent_mem_limits` | string | *optional* | defaults/checkpoint_waf_agent_defaults.yml | Memory limits for the WAF agent container (e.g., "1GB") |
@@ -47,9 +47,7 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 | `gpath` | string | `"computeMetadata/v1/instance/service-accounts"` | defaults/checkpoint_waf_agent_defaults.yml | Magic Link path to service account access token |
 | `iam_link` | string | `"http://{{ gaddr }}/{{ gpath }}/default/token"` | defaults/checkpoint_waf_agent_defaults.yml | Full iam link. It could be resolved by gaddr and gpath automatically - as it's jinja2 shortage |
 | `inventory_dir` | - | - | tasks/checkpoint_waf_agent_install.yml | - |
-| `multi_profile` | - | - | templates/cp_waf_agent.service.j2 | - |
-| `multi_secret` | - | - | templates/.CP_WAF_AGENT_TOKEN.j2 | - |
-| `nginx_certs` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of certificate content pairs to copy directly into certs directory |
+| `nginx_certs` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of certificate content pairs to copy directly into certs directory. nginx_certs and yc_certificates_ids mutually explicit. nginx_certs and yc_certificates_ids mutually explicit. |
 | `nginx_limits` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of nginx limit definitions for rate limiting and connection limiting |
 | `nginx_servers` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of nginx virtual server configurations with SSL and proxy settings |
 | `path_backen_config` | - | - | templates/Env.j2 | - |
@@ -66,7 +64,7 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 | `profile_yc_certificates_ids` | - | - | templates/yandex_certificate_crawler_profile.service.j2 | - |
 | `role_name` | - | - | tasks/checkpoint_waf_agent_install.yml | - |
 | `use_yandex_container_registry` | bool | `false` | defaults/checkpoint_waf_agent_defaults.yml | Does it required to autentificate to Yandex Cloud registry by using Magic Link token of SA? |
-| `yandex_certificate_crawler_schedule` | string | *optional* | defaults/checkpoint_waf_agent_defaults.yml | Systemd timer schedule for certificate crawler (e.g., "*-*-* 03:00:00") |
+| `yandex_certificate_crawler_schedule` | string | *optional* | defaults/checkpoint_waf_agent_defaults.yml | Systemd timer schedule for certificate crawler (e.g., "*-*-* 03:00:00"). Deafult is ""*-*-* 19:00:00". |
 | `yandex_cloud_token` | string | `"fakekey"` | defaults/checkpoint_waf_agent_defaults.yml | Yandex Cloud static token. |
 | `yandex_cloud_token_static` | string | `"dummy-xxxx-xxxx-xxx"` | defaults/checkpoint_waf_agent_defaults.yml | Yandex Cloud static IAM token for testing (override with vault or secrets) |
 | `yandex_crawler_script_files` | - | - | tasks/checkpoint_waf_agent_install.yml | - |
