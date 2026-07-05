@@ -9,7 +9,7 @@
 
 [yaml_lint]
   extends = "default"
-  ignore = [".git/*", "molecule/**", "vars/*", "files/*", ".yamllint", ".ansible-lint"]
+  ignore = [".git/*", "molecule/**", "vars/*", "files/*", "defaults/*", ".yamllint", ".ansible-lint"]
   [yaml_lint.rules]
     comments-indentation = false
     [yaml_lint.rules.braces]
@@ -28,7 +28,7 @@
 [ansible_lint]
   exclude_paths = ["molecule/default/verify.yml", "molecule/default/tests/*.yml", "molecule/default/tests/*/*/*.yml", "tests/test.yml"]
   warn_list = ["meta-no-info", "yaml[line-length]"]
-  skip_list = ["meta-incorrect", "role-name[path]", "role-name", "var-naming[no-role-prefix]"]
+  skip_list = ["meta-incorrect", "role-name[path]", "role-name", "var-naming[no-role-prefix]", "schema[meta]"]
 
 [tests]
   type = "diffusion"

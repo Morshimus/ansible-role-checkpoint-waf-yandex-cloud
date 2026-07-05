@@ -24,7 +24,8 @@
         "check_verify_yml",
         "check_docker_environment",
         "run_diffusion_command",
-        "docker_exec_in_molecule"
+        "docker_exec_in_molecule",
+        "update_diffusion_docs"
       ]
     }
   }
