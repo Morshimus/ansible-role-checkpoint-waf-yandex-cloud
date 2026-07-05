@@ -19,14 +19,15 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 
 | Variable | Type | Default | Source | Description |
 |----------|------|---------|--------|-------------|
-| `certificate` | - | - | templates/yandex_certificate_crawler.service.j2 | - |
-| `cipher` | - | - | templates/nginx_upstreams.conf.j2 | - |
-| `cp_waf_agent_authorization_token` | - | `dummy-xxxx-xxx-xxx` | vars/main.yml | - |
+| `cp_waf_agent_authorization_token` | string | **required** | defaults/checkpoint_waf_agent_defaults.yml | Checkpoint CloudGuard Portal Authorization Token. |
 | `cp_waf_agent_cpu_limits` | - | - | templates/Env.j2 | - |
 | `cp_waf_agent_mem_limits` | - | - | templates/Env.j2 | - |
-| `cp_waf_agent_multi_envs` | - | - | tasks/checkpoint_waf_multi_agent.yml | - |
-| `cp_waf_agent_multi_secrets` | - | - | tasks/checkpoint_waf_multi_agent.yml | - |
-| `cp_waf_agent_multi_services` | - | - | tasks/checkpoint_waf_multi_agent.yml | - |
+| `cp_waf_agent_multi_envs` | list | `[]` | defaults/checkpoint_waf_agent_defaults.yml | per-profile environment and cert configuration |
+| `cp_waf_agent_multi_images` | list | `[]` | defaults/checkpoint_waf_agent_defaults.yml | list of image families referenced by profiles |
+| `cp_waf_agent_multi_network` | map | *optional* | defaults/checkpoint_waf_agent_defaults.yml | bridge network config shared by all multi-agent containers |
+| `cp_waf_agent_multi_resources` | list | `[]` | defaults/checkpoint_waf_agent_defaults.yml | per-profile Docker resource limits |
+| `cp_waf_agent_multi_secrets` | list | `[]` | defaults/checkpoint_waf_agent_defaults.yml | per-profile secret references (token files) |
+| `cp_waf_agent_multi_services` | list | `[]` | defaults/checkpoint_waf_agent_defaults.yml | Multi-agent profile definitions |
 | `docker_add_alias` | - | `true` | defaults/docker_defaults.yml | - |
 | `docker_allow_ping` | - | `false` | defaults/docker_defaults.yml | - |
 | `docker_allow_privileged_ports` | - | `false` | defaults/docker_defaults.yml | - |
@@ -50,6 +51,8 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 | `multi_profile` | - | - | templates/cp_waf_agent.service.j2 | - |
 | `multi_secret` | - | - | templates/.CP_WAF_AGENT_TOKEN.j2 | - |
 | `nginx_certs` | - | - | tasks/checkpoint_waf_agent_install.yml | - |
+| `nginx_limits` | - | - | templates/nginx_limits.conf.j2 | - |
+| `nginx_servers` | - | - | templates/nginx_upstreams.conf.j2 | - |
 | `path_backen_config` | - | - | templates/Env.j2 | - |
 | `path_backend_config` | string | `"/opt/CloudGuard/WAF"` | defaults/checkpoint_waf_agent_defaults.yml | Path to docker-compose and config files |
 | `path_cp_agent_waf_certs` | string | `"{{ path_backend_config }}/Certs"` | defaults/checkpoint_waf_agent_defaults.yml | Path where Checkpoint CloudGuard agent will storre Certificates. It could be resolved by path_backend_config automatically to Certs - as it's jinja2 shortage |
@@ -61,13 +64,13 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 | `path_docker_root` | - | `/opt/Docker/root/lib` | defaults/docker_defaults.yml | - |
 | `playbook_dir` | - | - | tasks/checkpoint_waf_agent_install.yml | - |
 | `profile_name` | - | - | templates/yandex_certificate_crawler_profile.service.j2 | - |
-| `protocol` | - | - | templates/nginx_upstreams.conf.j2 | - |
+| `profile_yc_certificates_ids` | - | - | templates/yandex_certificate_crawler_profile.service.j2 | - |
 | `role_name` | - | - | tasks/checkpoint_waf_agent_install.yml | - |
 | `use_yandex_container_registry` | bool | `false` | defaults/checkpoint_waf_agent_defaults.yml | Does it required to autentificate to Yandex Cloud registry by using Magic Link token of SA? |
 | `yandex_certificate_crawler_schedule` | - | - | templates/yandex_certificate_crawler.timer.j2 | - |
 | `yandex_cloud_token` | string | `"fakekey"` | defaults/checkpoint_waf_agent_defaults.yml | Yandex Cloud static token. |
-| `yandex_cloud_token_static` | - | `dummy-xxxx-xxxx-xxx` | vars/main.yml | - |
 | `yandex_crawler_script_files` | - | - | tasks/checkpoint_waf_agent_install.yml | - |
+| `yc_certificates_ids` | - | - | templates/yandex_certificate_crawler.service.j2 | - |
 
 <!-- end role_variables -->
 ---
