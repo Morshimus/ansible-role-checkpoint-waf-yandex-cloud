@@ -53,6 +53,8 @@
     },
     "shell": {
       "allowedCommands": [
+        "diffusion molecule",
+        "diffusion molecule --force",
         "diffusion molecule --lint",
         "diffusion molecule --verify",
         "diffusion molecule --verify --tags *",

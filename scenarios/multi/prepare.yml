@@ -4,6 +4,24 @@
   gather_facts: true
 
   tasks:
+    - name: Create user service folder
+      ansible.builtin.file:
+        path: /etc/systemd/system/user@.service.d
+        state: directory
+        mode: "0600"
+
+    - name: Create Delegate configuation for users.
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/user@.service.d/delegate.conf
+        mode: "0600"
+        content: |
+          [Service]
+          Delegate=cpu cpuset io memory pids
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+
     - name: Install iptables and sudo MOLECULE
       ansible.builtin.apt:
         pkg:
