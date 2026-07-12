@@ -1,3 +1,8 @@
+---
+name: tester
+description: Testing, dependency management, and Diffusion workflow guidelines for this Ansible role
+---
+
 # Testing
 
 When running or writing tests for this repository, always use the **Diffusion MCP tools** (e.g. `mcp_diffusion_*` tools such as `check_molecule_yml`, `check_verify_yml`, `docker_exec_in_molecule`, `troubleshoot_molecule_container`, etc.).
