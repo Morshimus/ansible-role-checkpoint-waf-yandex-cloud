@@ -1,5 +1,5 @@
 {% if checkpoint_waf_multi_agent is defined and checkpoint_waf_multi_agent -%}
-{{ multi_secret }}
+{{ _multi_secret }}
 {% else -%}
 {{ cp_waf_agent_authorization_token | default('dummy-xxxx-xxxx') }}
 {% endif -%}

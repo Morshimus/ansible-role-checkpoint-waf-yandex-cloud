@@ -53,6 +53,8 @@
     },
     "shell": {
       "allowedCommands": [
+        "diffusion molecule",
+        "diffusion molecule --force",
         "diffusion molecule --lint",
         "diffusion molecule --verify",
         "diffusion molecule --verify --tags *",
@@ -121,7 +123,8 @@
     "file://handlers/**",
     "file://templates/**",
     "file://vars/**",
-    "file://meta/main.yml"
+    "file://meta/main.yml",
+    "skill://.kiro/skills/tester/SKILL.md"
   ],
   "hooks": {
     "agentSpawn": [

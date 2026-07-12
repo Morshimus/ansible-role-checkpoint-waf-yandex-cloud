@@ -189,7 +189,7 @@
   become_user: "{{ docker_user }}"
   vars:
     _sp: "{{ path_backend_config }}/secrets"
-    multi_secret: "{{ item.secret }}"
+    _multi_secret: "{{ item.secret }}"
   ansible.builtin.template:
     src: .CP_WAF_AGENT_TOKEN.j2
     dest: "{{ _sp }}/{{ item.profile_name }}/.CP_WAF_AGENT_TOKEN"
@@ -299,7 +299,7 @@
 
 - name: Create systemd service for docker-compose (multi-agent)
   vars:
-    multi_profile: "{{ item.profile_name }}"
+    _multi_profile: "{{ item.profile_name }}"
   ansible.builtin.template:
     src: cp_waf_agent.service.j2
     dest: >-

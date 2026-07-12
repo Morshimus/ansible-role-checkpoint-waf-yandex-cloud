@@ -1,4 +1,4 @@
-﻿---
+---
 #-| bool
 docker_add_alias: true
 #-? Add Docker alias to user bashrc
@@ -16,7 +16,6 @@ docker_rootful_opts: >
   --live-restore --icc=false --default-ulimit nproc=512:1024
   --default-ulimit nofile=100:200 -H fd://
 #-? Docker daemon options for rootful mode
-
 #-| string
 docker_user: docker-adm
 #-? Docker user for rootless Docker installation
@@ -40,10 +39,6 @@ docker_compose: true
 #-| bool
 docker_service_restart: false
 #-? Restart Docker service after configuration changes
-
-#-| string
-docker_rootless_service_template: docker_rootless_cgroupdriver.service.j2
-#-? Template for Docker rootless systemd service
 
 #-| string
 docker_daemon_json_template: daemon_no_snapshotter.json.j2
