@@ -59,6 +59,29 @@
   register: enable_linger_command
   changed_when: enable_linger_command.rc == 0
 
+- name: Check if slices folder exists
+  become: true
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/user@.service.d"
+  register: slices_service_d
+
+- name: Create directory for users slices
+  become: true
+  ansible.builtin.file:
+    path: "/etc/systemd/system/user@.service.d"
+    state: directory
+    mode: "0745"
+  when: not slices_service_d.stat.exists
+
+- name: Create delegate.conf file for user services
+  become: true
+  ansible.builtin.copy:
+    content: "[Service]\nDelegate=cpu cpuset io memory pids\n"
+    dest: "/etc/systemd/system/user@.service.d/delegate.conf"
+    mode: "0644"
+    backup: true
+  notify: daemon-reload
+
 - name: Start and Enable Docker Service
   become: true
   become_user: "{{ docker_user }}"
