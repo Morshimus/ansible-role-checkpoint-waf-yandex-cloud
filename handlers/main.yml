@@ -1,11 +1,13 @@
 ---
 - name: Reload systemd configuration
   listen: daemon-reload
+  become: true
   ansible.builtin.systemd:
     daemon_reload: true
 
 - name: Restart Checkpoint WAF Agent Docker Compose service
   listen: restart-cp-waf-agent-docker
+  become: true
   ansible.builtin.service:
     name: checkpoint_waf_agent_docker
     enabled: true
@@ -13,6 +15,7 @@
 
 - name: Restart Checkpoint WAF Agent Docker Compose service Multi
   listen: restart-cp-waf-agent-multi-docker
+  become: true
   ansible.builtin.service:
     name: checkpoint_waf_agent_docker_{{ item.profile_name }}
     enabled: true
