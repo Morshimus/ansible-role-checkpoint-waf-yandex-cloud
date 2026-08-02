@@ -324,6 +324,7 @@
   changed_when: false
 
 - name: Enable and start yandex crawler timer
+  become: true
   ansible.builtin.systemd:
     name: yandex_certificate_crawler.timer
     enabled: true
