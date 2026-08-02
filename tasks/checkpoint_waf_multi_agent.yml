@@ -34,15 +34,15 @@
 # ---- System prerequisites ----
 
 - name: Install jq for yandex crawler service
+  become: true
   ansible.builtin.apt:
     pkg:
       - jq
     state: present
     update_cache: true
   when: >
-    (ansible_distribution == 'Ubuntu' or
-    ansible_distribution == 'Debian') and
-    molecule_yml is defined
+    (ansible_facts['distribution'] == 'Ubuntu' or
+    ansible_facts['distribution'] == 'Debian')
 
 - name: Check Docker user
   become: true
@@ -92,11 +92,13 @@
 # ---- Root WAF directory ----
 
 - name: Check Checkpoint WAF root folder
+  become: true
   ansible.builtin.stat:
     path: "{{ path_backend_config }}"
   register: checkpoint_waf_root
 
 - name: Create Checkpoint WAF root folder
+  become: true
   ansible.builtin.file:
     path: "{{ path_backend_config | trim }}"
     state: directory
@@ -106,6 +108,7 @@
   when: not checkpoint_waf_root.stat.exists
 
 - name: Create shared nginx log folder at host
+  become: true
   ansible.builtin.file:
     path: "/var/log/nginx"
     state: directory
@@ -117,6 +120,7 @@
 # ---- Per-profile directory trees ----
 
 - name: Create per-profile AgentConfiguration directory
+  become: true
   ansible.builtin.file:
     path: "{{ path_backend_config }}/AgentConfiguration/{{ item.profile_name }}"
     state: directory
@@ -128,6 +132,7 @@
     label: "{{ item.profile_name }}"
 
 - name: Create per-profile NginxConfiguration directory
+  become: true
   ansible.builtin.file:
     path: "{{ path_backend_config }}/NginxConfiguration/{{ item.profile_name }}"
     state: directory
@@ -139,6 +144,7 @@
     label: "{{ item.profile_name }}"
 
 - name: Create per-profile Certs directory
+  become: true
   ansible.builtin.file:
     path: "{{ path_backend_config }}/Certs/{{ item.profile_name }}"
     state: directory
@@ -150,6 +156,7 @@
     label: "{{ item.profile_name }}"
 
 - name: Create per-profile Data directory
+  become: true
   ansible.builtin.file:
     path: "{{ path_backend_config }}/Data/{{ item.profile_name }}"
     state: directory
@@ -161,6 +168,7 @@
     label: "{{ item.profile_name }}"
 
 - name: Create per-profile Logs directory
+  become: true
   ansible.builtin.file:
     path: "{{ path_backend_config }}/Logs/{{ item.profile_name }}"
     state: directory
@@ -172,6 +180,7 @@
     label: "{{ item.profile_name }}"
 
 - name: Create per-profile secrets directory
+  become: true
   ansible.builtin.file:
     path: "{{ path_backend_config }}/secrets/{{ item.profile_name }}"
     state: directory
@@ -298,6 +307,7 @@
 # ---- Systemd service for docker-compose ----
 
 - name: Create systemd service for docker-compose (multi-agent)
+  become: true
   vars:
     _multi_profile: "{{ item.profile_name }}"
   ansible.builtin.template:
@@ -313,6 +323,7 @@
 # ---- Yandex certificate crawler (per profile) ----
 
 - name: Create shared yc_cert_crawler directory
+  become: true
   ansible.builtin.file:
     path: "{{ path_backend_config }}/yc_cert_crawler"
     state: directory
@@ -334,6 +345,7 @@
     - "yandex_certificate_crawler.sh"
 
 - name: Install per-profile systemd service for yandex certificate crawler
+  become: true
   ansible.builtin.template:
     src: yandex_certificate_crawler_profile.service.j2
     dest: >-
@@ -342,14 +354,15 @@
     mode: "0600"
   vars:
     _sd: /etc/systemd/system
-    profile_name: "{{ item.profile_name }}"
-    profile_yc_certificates_ids: "{{ item.yc_certificates_ids | default([]) }}"
+    _profile_name: "{{ item.profile_name }}"
+    _profile_yc_certificates_ids: "{{ item.yc_certificates_ids | default([]) }}"
   loop: "{{ cp_waf_agent_multi_envs }}"
   loop_control:
     label: "{{ item.profile_name }}"
   register: yandex_certificate_crawler_services
 
 - name: Install per-profile systemd timer for yandex certificate crawler
+  become: true
   ansible.builtin.template:
     src: yandex_certificate_crawler_profile.timer.j2
     dest: >-
@@ -358,13 +371,14 @@
     mode: "0600"
   vars:
     _sd: /etc/systemd/system
-    profile_name: "{{ item.profile_name }}"
+    _profile_name: "{{ item.profile_name }}"
   loop: "{{ cp_waf_agent_multi_envs }}"
   loop_control:
     label: "{{ item.profile_name }}"
   register: yandex_certificate_crawler_timers
 
 - name: Reload systemd configuration
+  become: true
   ansible.builtin.systemd:
     daemon_reload: true
   when: >
@@ -372,6 +386,7 @@
     yandex_certificate_crawler_timers.changed
 
 - name: Start per-profile yandex crawler services
+  become: true
   ansible.builtin.systemd:
     name: "yandex_certificate_crawler_{{ item.profile_name }}"
     state: started
@@ -381,6 +396,7 @@
     label: "{{ item.profile_name }}"
 
 - name: Enable and start per-profile yandex crawler timers
+  become: true
   ansible.builtin.systemd:
     name: "yandex_certificate_crawler_{{ item.profile_name }}.timer"
     enabled: true

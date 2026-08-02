@@ -39,18 +39,15 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 | `docker_rootful` | bool | `false` | defaults/docker_defaults.yml | Enable rootful Docker (not recommended) |
 | `docker_rootful_enabled` | bool | `false` | defaults/docker_defaults.yml | Enable rootful Docker daemon |
 | `docker_rootful_opts` | string | `{--live-restore --icc=false --default-ulimit nproc=512:1024, --default-ulimit nofile=100:200 -H fd://}` | defaults/docker_defaults.yml | Docker daemon options for rootful mode |
-| `docker_rootless_service_template` | string | `docker_rootless_cgroupdriver.service.j2` | defaults/docker_defaults.yml | Template for Docker rootless systemd service |
 | `docker_service_restart` | bool | `false` | defaults/docker_defaults.yml | Restart Docker service after configuration changes |
 | `docker_user` | string | `docker-adm` | defaults/docker_defaults.yml | Docker user for rootless Docker installation |
 | `docker_user_bashrc` | bool | `false` | defaults/docker_defaults.yml | Extend Docker user bashrc configuration |
 | `gaddr` | string | `"169.254.169.254"` | defaults/checkpoint_waf_agent_defaults.yml | Magic link accessable from VM instance. |
 | `gpath` | string | `"computeMetadata/v1/instance/service-accounts"` | defaults/checkpoint_waf_agent_defaults.yml | Magic Link path to service account access token |
 | `iam_link` | string | `"http://{{ gaddr }}/{{ gpath }}/default/token"` | defaults/checkpoint_waf_agent_defaults.yml | Full iam link. It could be resolved by gaddr and gpath automatically - as it's jinja2 shortage |
-| `inventory_dir` | - | - | tasks/checkpoint_waf_agent_install.yml | - |
 | `nginx_certs` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of certificate content pairs to copy directly into certs directory. nginx_certs and yc_certificates_ids mutually explicit. nginx_certs and yc_certificates_ids mutually explicit. |
 | `nginx_limits` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of nginx limit definitions for rate limiting and connection limiting |
 | `nginx_servers` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of nginx virtual server configurations with SSL and proxy settings |
-| `path_backen_config` | - | - | templates/Env.j2 | - |
 | `path_backend_config` | string | `"/opt/CloudGuard/WAF"` | defaults/checkpoint_waf_agent_defaults.yml | Path to docker-compose and config files |
 | `path_cp_agent_waf_certs` | string | `"{{ path_backend_config }}/Certs"` | defaults/checkpoint_waf_agent_defaults.yml | Path where Checkpoint CloudGuard agent will storre Certificates. It could be resolved by path_backend_config automatically to Certs - as it's jinja2 shortage |
 | `path_cp_agent_waf_configuration` | string | `"{{ path_backend_config }}/AgentConfiguration"` | defaults/checkpoint_waf_agent_defaults.yml | Path where Agent Configuration will be stored.It could be resolved by path_backend_config automatically to AgentConfiguration - as it's jinja2 shortage |
@@ -59,15 +56,10 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 | `path_cp_nginx_configuration` | string | `"{{ path_backend_config }}/NginxConfiguration"` | defaults/checkpoint_waf_agent_defaults.yml | Path where Nginx Configuration will be stored. It could be resolved by path_backend_config automatically to NginxConfiguration - as it's jinja2 shortage |
 | `path_docker` | string | `/opt/Docker/root` | defaults/docker_defaults.yml | Docker installation directory |
 | `path_docker_root` | string | `/opt/Docker/root/lib` | defaults/docker_defaults.yml | Docker root library directory |
-| `playbook_dir` | - | - | tasks/checkpoint_waf_agent_install.yml | - |
-| `profile_name` | - | - | templates/yandex_certificate_crawler_profile.service.j2 | - |
-| `profile_yc_certificates_ids` | - | - | templates/yandex_certificate_crawler_profile.service.j2 | - |
-| `role_name` | - | - | tasks/checkpoint_waf_agent_install.yml | - |
 | `use_yandex_container_registry` | bool | `false` | defaults/checkpoint_waf_agent_defaults.yml | Does it required to autentificate to Yandex Cloud registry by using Magic Link token of SA? |
 | `yandex_certificate_crawler_schedule` | string | *optional* | defaults/checkpoint_waf_agent_defaults.yml | Systemd timer schedule for certificate crawler (e.g., "*-*-* 03:00:00"). Deafult is ""*-*-* 19:00:00". |
 | `yandex_cloud_token` | string | `"fakekey"` | defaults/checkpoint_waf_agent_defaults.yml | Yandex Cloud static token. |
 | `yandex_cloud_token_static` | string | `"dummy-xxxx-xxxx-xxx"` | defaults/checkpoint_waf_agent_defaults.yml | Yandex Cloud static IAM token for testing (override with vault or secrets) |
-| `yandex_crawler_script_files` | - | - | tasks/checkpoint_waf_agent_install.yml | - |
 | `yc_certificates_ids` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of Yandex Certificate Manager certificate IDs to fetch periodically |
 
 <!-- end role_variables -->

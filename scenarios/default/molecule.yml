@@ -4,7 +4,7 @@ dependency:
   options:
     requirements-file: requirements.yml
 driver:
-  name: default
+  name: docker
 platforms:
   - name: Ubuntu-24-04
     image: geerlingguy/docker-ubuntu2404-ansible:latest

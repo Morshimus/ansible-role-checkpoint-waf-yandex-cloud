@@ -73,14 +73,15 @@
     mode: "0745"
   when: not slices_service_d.stat.exists
 
-- name: Create delegate.conf file for user services
+- name: Create Delegate configuation for users.
   become: true
   ansible.builtin.copy:
-    content: "[Service]\nDelegate=cpu cpuset io memory pids\n"
-    dest: "/etc/systemd/system/user@.service.d/delegate.conf"
-    mode: "0644"
-    backup: true
-  notify: daemon-reload
+    dest: /etc/systemd/system/user@.service.d/delegate.conf
+    mode: "0600"
+    content: |
+      [Service]
+      Delegate=cpu cpuset io memory pids
+  when: not slices_service_d.stat.exists
 
 - name: Start and Enable Docker Service
   become: true

@@ -274,7 +274,7 @@
 
 - name: Yandex Crawler script files
   ansible.builtin.set_fact:
-    yandex_crawler_script_files:
+    _yandex_crawler_script_files:
       - "run.sh"
       - "yandex_certificate_crawler.sh"
 
@@ -287,7 +287,7 @@
     dest: "{{ path_backend_config }}/yc_cert_crawler/{{ item }}"
     mode: "0777"
     owner: "{{ docker_user }}"
-  loop: "{{ yandex_crawler_script_files }}"
+  loop: "{{ _yandex_crawler_script_files }}"
 
 - name: Install systemd timer for yandex certificate crawler
   become: true
