@@ -70,6 +70,7 @@
   register: nginx_logs
 
 - name: Configure Checkpoint WAF Agent Configuration Folders
+  become: true
   block:
     - name: Create Checkpoint WAF Agent Config Root folder
       ansible.builtin.file:
