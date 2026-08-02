@@ -32,8 +32,7 @@
     update_cache: true
   when: >
     (ansible_facts['distribution'] == 'Ubuntu' or
-    ansible_facts['distribution'] == 'Debian') and
-    molecule_yml is defined
+    ansible_facts['distribution'] == 'Debian')
 
 - name: Check that the Checkpoint WAF Agent Docker Compose service file exist
   ansible.builtin.stat:
