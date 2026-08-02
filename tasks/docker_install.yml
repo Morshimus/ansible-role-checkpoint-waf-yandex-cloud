@@ -55,7 +55,7 @@
 
 - name: Enable lingering for  MOLECULE if not exist user {{ docker_user }}
   ansible.builtin.command: "loginctl enable-linger {{ docker_user }}"
-  when: not user_lingering_status.stat.exists
+  when: molecule_yml is defined
   register: enable_linger_command
   changed_when: enable_linger_command.rc == 0
 
