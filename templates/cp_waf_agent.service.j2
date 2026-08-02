@@ -1,9 +1,9 @@
 
 [Unit]
 {% if checkpoint_waf_multi_agent is defined and checkpoint_waf_multi_agent -%}
-Description=Chekpoint WAF agent linru service with docker-compose for profile {{ _multi_profile }}
+Description=Chekpoint WAF agent service with docker-compose for profile {{ _multi_profile }}
 {% else -%}
-Description=Chekpoint WAF agent linru service with docker-compose
+Description=Chekpoint WAF agent service with docker-compose
 {% endif -%}
 StartLimitBurst=10
 StartLimitIntervalSec=90
