@@ -24,6 +24,7 @@
   when: molecule_yml is defined
 
 - name: Install jq for yandex crawler service
+  become: true
   ansible.builtin.apt:
     pkg:
       - jq
@@ -201,6 +202,7 @@
   when: use_yandex_container_registry
 
 - name: Check Checkpoint WAF Agent .env file exists
+  become: true
   ansible.builtin.stat:
     path: "{{ path_backend_config }}/.env"
   register: env_file
@@ -256,11 +258,13 @@
   notify: restart-cp-waf-agent-docker
 
 - name: Check if folder for yandex crawler exist
+  become: true
   ansible.builtin.stat:
     path: "{{ path_backend_config }}/yc_cert_crawler"
   register: yc_cert_crawler
 
 - name: Create Yandex Crawler Folder
+  become: true
   ansible.builtin.file:
     path: "{{ path_backend_config }}/yc_cert_crawler"
     state: directory
@@ -287,6 +291,7 @@
   loop: "{{ yandex_crawler_script_files }}"
 
 - name: Install systemd timer for yandex certificate crawler
+  become: true
   ansible.builtin.template:
     src: yandex_certificate_crawler.timer.j2
     dest: /etc/systemd/system/yandex_certificate_crawler.timer
@@ -295,6 +300,7 @@
   register: yandex_certificate_crawler_timer
 
 - name: Install systemd service for yandex certificate crawler
+  become: true
   ansible.builtin.template:
     src: yandex_certificate_crawler.service.j2
     dest: /etc/systemd/system/yandex_certificate_crawler.service
@@ -303,6 +309,7 @@
   register: yandex_certificate_crawler_service
 
 - name: Reload systemd configuration
+  become: true
   ansible.builtin.systemd:
     daemon_reload: true
   when: >
@@ -310,6 +317,7 @@
     yandex_certificate_crawler_timer.changed
 
 - name: Init start yandex crawler service
+  become: true
   ansible.builtin.systemd:
     name: yandex_certificate_crawler
     state: started
@@ -361,6 +369,7 @@
   until: docker_pull_result is not failed
 
 - name: Create systemd service for docker-compose
+  become: true
   ansible.builtin.template:
     src: cp_waf_agent.service.j2
     dest: /etc/systemd/system/checkpoint_waf_agent_docker.service
