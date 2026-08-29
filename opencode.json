@@ -1,0 +1,33 @@
+{
+  "instructions": [
+    ".opencode/steering/product.md",
+    ".opencode/steering/steering.md"
+  ],
+  "mcp": {
+    "diffusion": {
+      "type": "local",
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "-i",
+        "-v",
+        "/var/run/docker.sock:/var/run/docker.sock",
+        "-v",
+        "./:/project",
+        "ghcr.io/polar-team/diffusion-mcp-server:latest-amd64"
+      ],
+      "enabled": true
+    }
+  },
+  "tools": {
+    "diffusion*": false
+  },
+  "agent": {
+    "diffusion_tester": {
+      "tools": {
+        "diffusion*": true
+      }
+    }
+  }
+}
