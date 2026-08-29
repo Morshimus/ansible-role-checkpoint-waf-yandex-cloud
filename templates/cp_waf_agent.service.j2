@@ -22,10 +22,10 @@ Group={{ docker_user }}
 WorkingDirectory={{ path_backend_config }}
 
 # Compose up
-ExecStart=/home/{{ docker_user }}/bin/docker-compose  up --remove-orphans --force-recreate
+ExecStart=/home/{{ docker_user }}/.local/bin/docker compose  up --remove-orphans --force-recreate
 
 # Compose down, remove containers
-ExecStop=/home/{{ docker_user }}/bin/docker-compose  down --volumes
+ExecStop=/home/{{ docker_user }}/.local/bin/docker compose  down --volumes
 
 [Install]
 WantedBy=multi-user.target

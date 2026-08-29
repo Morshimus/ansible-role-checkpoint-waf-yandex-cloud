@@ -22,6 +22,53 @@
       ansible.builtin.systemd_service:
         daemon_reload: true
 
+    - name: Remove default ubuntu user MOLECULE
+      when:
+        - molecule_yml is defined
+        - ansible_facts['distribution'] == 'Ubuntu'
+        - ansible_facts['distribution_version'] is version('24.04', '>=')
+      block:
+        - name: Check if default ubuntu user exists
+          ansible.builtin.getent:
+            database: passwd
+            key: ubuntu
+          register: default_ubuntu_user
+          failed_when: false
+
+        - name: Terminate default ubuntu user sessions and processes
+          when: default_ubuntu_user.ansible_facts.getent_passwd.ubuntu is defined
+          block:
+            - name: Disable lingering for default ubuntu user
+              ansible.builtin.command: loginctl disable-linger ubuntu
+              register: ubuntu_disable_linger
+              changed_when: ubuntu_disable_linger.rc == 0
+              failed_when: false
+
+            - name: Kill remaining processes owned by default ubuntu user
+              ansible.builtin.command: pkill -KILL -u ubuntu
+              register: ubuntu_pkill
+              changed_when: ubuntu_pkill.rc == 0
+              # pkill returns 1 when no processes matched — not an error here
+              failed_when: ubuntu_pkill.rc not in [0, 1]
+
+        - name: Delete default ubuntu user and home directory
+          ansible.builtin.user:
+            name: ubuntu
+            state: absent
+            remove: true
+            force: true
+          when: default_ubuntu_user.ansible_facts.getent_passwd.ubuntu is defined
+
+        - name: Remove default ubuntu group if empty
+          ansible.builtin.group:
+            name: ubuntu
+            state: absent
+
+        - name: Remove cloud-init default user sudoers drop-in
+          ansible.builtin.file:
+            path: /etc/sudoers.d/90-cloud-init-users
+            state: absent
+
     - name: Install iptables and sudo MOLECULE
       ansible.builtin.apt:
         pkg:
@@ -30,11 +77,11 @@
         state: present
         update_cache: true
       when: >
-        (ansible_distribution == 'Ubuntu' or
-        ansible_distribution == 'Debian') and
+        (ansible_facts['distribution'] == 'Ubuntu' or
+        ansible_facts['distribution'] == 'Debian') and
         molecule_yml is defined
 
-    - name: Install Docker Rootless MOLECULE
+    - name: Configure iptables
       when: molecule_yml is defined
       block:
         - name: Check if current ip tables is legacy
@@ -58,15 +105,6 @@
             executable: /bin/sh
           changed_when:
             - "'/usr/sbin/iptables-legacy' not in iptables_mode.stdout"
-
-        - name: Install Docker Compose
-          ansible.builtin.apt:
-            pkg:
-              - docker-compose
-            state: present
-          when: >
-            ansible_distribution == 'Ubuntu' or
-            ansible_distribution == 'Debian'
 
     - name: Set fact of yc_token MOLECULE
       ansible.builtin.set_fact:
