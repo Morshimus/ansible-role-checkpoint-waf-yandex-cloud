@@ -106,7 +106,7 @@
   become: true
   become_user: "{{ docker_user }}"
   ansible.builtin.command:
-    cmd: systemctl --user enable docker && systemctl --user start docker
+    cmd: systemctl --user enable docker.service && systemctl --user start docker.service
   environment:
     XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
   changed_when: false
