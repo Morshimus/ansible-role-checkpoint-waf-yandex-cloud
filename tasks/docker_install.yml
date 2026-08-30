@@ -85,6 +85,8 @@
       Delegate=cpu cpuset io memory pids
   when: not slices_service_d.stat.exists
 
+# TODO: Create mechanic which will check systemd service for Ubuntu 22.04 version.
+
 - name: Start and Enable Docker Service
   become: true
   become_user: "{{ docker_user }}"
@@ -93,24 +95,6 @@
     enabled: true
     state: started
     scope: user
-  environment:
-    XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
-  when:
-    - >
-      ansible_facts['distribution'] == 'Ubuntu' and
-      ansible_facts['distribution_version'] is version('22.04','>')
-
-# TODO:Need to add condition of docker service status if not enabled.
-
-- name: Start and Enable Docker Service
-  become: true
-  become_user: "{{ docker_user }}"
-  ansible.builtin.command:
-    cmd: systemctl --user enable docker.service && systemctl --user start docker.service
-  environment:
-    XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
   changed_when: false
-  when:
-    - >
-      ansible_facts['distribution'] == 'Ubuntu' and
-      ansible_facts['distribution_version'] is version('22.04','==')
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
