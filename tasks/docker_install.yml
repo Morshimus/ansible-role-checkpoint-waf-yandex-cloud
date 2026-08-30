@@ -85,7 +85,7 @@
       Delegate=cpu cpuset io memory pids
   when: not slices_service_d.stat.exists
 
-# TODO: Create mechanic which will check systemd service for Ubuntu 22.04 version.
+# TODO: Create mechanic which will check systemd for Ubuntu 22.04
 
 - name: Start and Enable Docker Service
   become: true
