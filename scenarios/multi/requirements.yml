@@ -1,13 +1,13 @@
 ---
 collections:
     - name: community.general
-      version: 13.1.0
+      version: 13.3.0
     - name: community.docker
-      version: 5.2.1
+      version: 5.2.2
     - name: ansible.posix
-      version: 2.2.1
+      version: 2.2.2
 roles:
     - name: docker_rootless
       src: https://github.com/konstruktoid/ansible-role-docker-rootless.git
-      version: v1.24.0
+      version: v2.3.0
       scm: git

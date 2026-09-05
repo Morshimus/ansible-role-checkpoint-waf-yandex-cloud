@@ -52,7 +52,7 @@ docker_registry_folder: "checkpoint"
 #-? Docker registry folder name.
 
 #-| string
-docker_cp_agent_image: "cloudguard-appsec-standalone:1580296"
+docker_cp_agent_image: "cloudguard-appsec-standalone:1667003"
 #-? Image name with tag.
 
 #-| string

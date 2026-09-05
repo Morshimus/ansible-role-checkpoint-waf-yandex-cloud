@@ -48,14 +48,16 @@
     public: true
 
 - name: Check if lingering is already enabled for the user MOLECULE
+  become: true
   ansible.builtin.stat:
     path: "/var/lib/systemd/linger/{{ docker_user }}"
   register: user_lingering_status
   when: molecule_yml is defined
 
 - name: Enable lingering for  MOLECULE if not exist user {{ docker_user }}
+  become: true
   ansible.builtin.command: "loginctl enable-linger {{ docker_user }}"
-  when: molecule_yml is defined
+  when: molecule_yml is defined and not user_lingering_status.stat.exists
   register: enable_linger_command
   changed_when: enable_linger_command.rc == 0
 
@@ -83,6 +85,8 @@
       Delegate=cpu cpuset io memory pids
   when: not slices_service_d.stat.exists
 
+# TODO: Create mechanic which will check systemd for Ubuntu 22.04
+
 - name: Start and Enable Docker Service
   become: true
   become_user: "{{ docker_user }}"
@@ -91,5 +95,6 @@
     enabled: true
     state: started
     scope: user
+  changed_when: false
   environment:
     XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"

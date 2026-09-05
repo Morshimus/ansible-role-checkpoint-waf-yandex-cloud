@@ -4,6 +4,15 @@ name: Tests
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      scenario:
+        description: "Which scenario(s) to run"
+        type: choice
+        options:
+          - all
+          - default
+          - multi
+        default: all
 
 jobs:
   test:
@@ -17,6 +26,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Add user for Docker sys fs emulation.
+        run: |
+          sudo useradd docker-adm && sudo loginctl enable-linger 1000
 
       - name: Run Diffusion Tests for Scenario ${{ matrix.scenario }}
         uses: Polar-Team/diffusion/diffusion-test@main
