@@ -28,7 +28,7 @@ jobs:
 
       - name: Add user
         run: |
-          sudo useradd -m s /bin/bash docker-adm
+          sudo useradd -m /bin/bash docker-adm
 
       - name: Run Diffusion Tests for Scenario ${{ matrix.scenario }}
         uses: Polar-Team/diffusion/diffusion-test@main
