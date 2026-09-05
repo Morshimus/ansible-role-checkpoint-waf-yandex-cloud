@@ -52,7 +52,7 @@ jobs:
   debug:
     name: Manual Debug Session
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && inputs.debug
+    if: github.event_name == inputs.debug
     env:
       SCENARIO: >-
         ${{ inputs.scenario == 'all' && 'default' || inputs.scenario }}
