@@ -28,7 +28,7 @@ jobs:
 
       - name: Add user
         run: |
-          sudo useradd docker-adm
+          sudo useradd docker-adm && sudo loginctl enable-linger 1000
 
       - name: Run Diffusion Tests for Scenario ${{ matrix.scenario }}
         uses: Polar-Team/diffusion/diffusion-test@main
