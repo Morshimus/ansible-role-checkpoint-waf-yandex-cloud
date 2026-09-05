@@ -43,8 +43,10 @@ Custom agents are defined in `.opencode/agents/`:
 ## Automated workflow (was a Kiro hook)
 
 Kiro previously ran a "Diffusion Lock Change Pipeline" hook that fired whenever `diffusion.lock`
-was saved. OpenCode does not have an equivalent file-save agent hook, so run this workflow
-manually (or wire it into CI / a git hook) after `diffusion.lock` changes:
+was saved. OpenCode does not have an equivalent file-save agent hook, so it is exposed as the
+`/lock-change-pipeline` command (`.opencode/command/lock-change-pipeline.md`, runs on the
+`diffusion_tester` agent). Run it manually (or wire the steps into CI / a git hook) after
+`diffusion.lock` changes:
 
 1. Run `diffusion deps check`.
 2. If the lock file is out of date / a sync is required, run `diffusion deps sync`, then

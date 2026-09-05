@@ -30,5 +30,6 @@
         "diffusion*": true
       }
     }
-  }
+  },
+  "default_agent": "devops-team-lead"
 }
