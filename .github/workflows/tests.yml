@@ -4,15 +4,6 @@ name: Tests
 on:
   pull_request:
   workflow_dispatch:
-    inputs:
-      scenario:
-        description: "Which scenario(s) to run"
-        type: choice
-        options:
-          - all
-          - default
-          - multi
-        default: all
 
 jobs:
   test:
