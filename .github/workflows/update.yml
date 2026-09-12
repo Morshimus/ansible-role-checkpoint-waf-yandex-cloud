@@ -37,7 +37,7 @@ jobs:
           run-lint: "true"
           run-verify: "true"
           run-idempotence: "true"
-          pr-title: "chore(deps): update diffusion dependencies"
+          pr-title: "chore(deps): update diffusion dependencies for ${{ matrix.scenario }}"
           pr-labels: ""
 
       - name: Update README.md versions from diffusion.lock
