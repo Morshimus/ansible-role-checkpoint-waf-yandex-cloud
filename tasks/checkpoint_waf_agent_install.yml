@@ -34,11 +34,6 @@
     (ansible_facts['distribution'] == 'Ubuntu' or
     ansible_facts['distribution'] == 'Debian')
 
-- name: Check that the Checkpoint WAF Agent Docker Compose service file exist
-  ansible.builtin.stat:
-    path: "/etc/systemd/system/checkpoint_waf_agent.service"
-  register: checkpoint_waf_agent_docker_service_result
-
 - name: Check Checkpoint WAF Agent Config folder
   ansible.builtin.stat:
     path: "{{ path_cp_agent_waf_configuration }}"
@@ -68,6 +63,11 @@
   ansible.builtin.stat:
     path: "/var/log/nginx"
   register: nginx_logs
+
+- name: Check Checkpoint WAF Agent secrets folder
+  ansible.builtin.stat:
+    path: "{{ path_backend_config }}/secrets"
+  register: checkpoint_waf_agent_secrets_root
 
 - name: Configure Checkpoint WAF Agent Configuration Folders
   become: true
@@ -113,10 +113,10 @@
       ansible.builtin.file:
         path: "{{ path_backend_config }}/secrets"
         state: directory
-        mode: "754"
+        mode: "0754"
         owner: "{{ docker_user }}"
         group: "{{ docker_user }}"
-      when: not checkpoint_waf_agent_config_root.stat.exists
+      when: not checkpoint_waf_agent_secrets_root.stat.exists
 
     - name: Create Checkpoint WAF Agent Operational data subfolder
       ansible.builtin.file:
@@ -193,18 +193,12 @@
     XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
     DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
     PATH: >
-      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
+      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   community.docker.docker_login:
     registry_url: "{{ docker_registry_url }}"
     username: iam
     password: "{{ yandex_cloud_token }}"
   when: use_yandex_container_registry
-
-- name: Check Checkpoint WAF Agent .env file exists
-  become: true
-  ansible.builtin.stat:
-    path: "{{ path_backend_config }}/.env"
-  register: env_file
 
 - name: Create .env file
   become: true
@@ -227,7 +221,7 @@
     backup: true
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
-    mode: "0777"
+    mode: "0755"
   notify: restart-cp-waf-agent-docker
 
 - name: Create nginx limit configuration file
@@ -239,7 +233,7 @@
     backup: true
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
-    mode: "0777"
+    mode: "0755"
   notify: restart-cp-waf-agent-docker
 
 - name: Nginx certificates copy.
@@ -249,8 +243,9 @@
     backup: true
     dest: "{{ path_cp_agent_waf_certs }}/{{ item[0] }}"
     content: "{{ item[1] }}"
-    mode: "0777"
+    mode: "0640"
     owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
   loop: "{{ nginx_certs }}"
   when: >
     nginx_certs is defined
@@ -285,7 +280,7 @@
     backup: true
     src: "yandex_certificate_crawler/{{ item }}"
     dest: "{{ path_backend_config }}/yc_cert_crawler/{{ item }}"
-    mode: "0777"
+    mode: "0755"
     owner: "{{ docker_user }}"
   loop: "{{ _yandex_crawler_script_files }}"
 
@@ -338,7 +333,7 @@
     backup: true
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
-    mode: "0777"
+    mode: "0755"
   notify: restart-cp-waf-agent-docker
 
 - name: Copy registration_cmd.sh file
@@ -360,7 +355,7 @@
     XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
     DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
     PATH: >
-      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
+      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   community.docker.docker_compose_v2_pull:
     project_src: "{{ path_backend_config }}"
   register: docker_pull_result

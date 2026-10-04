@@ -7,8 +7,9 @@ set_real_ip_from 10.89.21.1/32;
 real_ip_recursive on;
 underscores_in_headers on;
 
-{% if nginx_servers is defined and nginx_servers | length > 0 %}
-{% for server in nginx_servers %}
+{% set _nginx_servers = _nginx_servers_profile if _nginx_servers_profile is defined else (nginx_servers | default([])) %}
+{% if _nginx_servers | length > 0 %}
+{% for server in _nginx_servers %}
 server {
   listen 443 ssl;
   server_name {{ server.server_name }};
@@ -50,7 +51,7 @@ server {
   location {{ location.path }} {
 {% if location.cors_headers is defined and location.cors_headers is true %}
     add_header Access-Control-Allow-Origin https://{{ location.api_host }};
-    add header Access-Control-Allow-Headers content-type;
+    add_header Access-Control-Allow-Headers content-type;
 {% endif %}
     proxy_pass {{ location.proxy_pass }};
 {% if location.proxy_header_strategy is defined and location.proxy_header_strategy == "purge" %}
