@@ -4,6 +4,13 @@
   gather_facts: true
 
   tasks:
+    - name: Ensure openssl is installed for self-signed certificates
+      become: true
+      ansible.builtin.apt:
+        name: openssl
+        state: present
+        update_cache: true
+
     - name: Create user service folder
       ansible.builtin.file:
         path: /etc/systemd/system/user@.service.d
