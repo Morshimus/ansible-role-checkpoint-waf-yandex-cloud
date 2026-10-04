@@ -193,7 +193,7 @@
     XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
     DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
     PATH: >
-      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
   community.docker.docker_login:
     registry_url: "{{ docker_registry_url }}"
     username: iam
@@ -355,7 +355,7 @@
     XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
     DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
     PATH: >
-      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
   community.docker.docker_compose_v2_pull:
     project_src: "{{ path_backend_config }}"
   register: docker_pull_result

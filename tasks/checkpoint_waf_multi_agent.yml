@@ -82,7 +82,7 @@
     XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
     DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
     PATH: >
-      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
   community.docker.docker_login:
     registry_url: "{{ docker_registry_url }}"
     username: iam
@@ -218,8 +218,17 @@
   become_user: "{{ docker_user }}"
   vars:
     _pn: "{{ path_backend_config }}/NginxConfiguration"
-    _profile_env: "{{ cp_waf_agent_multi_envs | selectattr('profile_name', 'equalto', item.profile_name) | first | default({}) }}"
-    _nginx_servers_profile: "{{ _profile_env['nginx_servers'] if ('nginx_servers' in _profile_env) else (nginx_servers | default([])) }}"
+    _profile_env: >-
+      {{
+         cp_waf_agent_multi_envs |
+         selectattr('profile_name', 'equalto', item.profile_name)
+         | first | default({})
+      }}
+    _nginx_servers_profile: >-
+      {{
+         _profile_env['nginx_servers'] if
+         ('nginx_servers' in _profile_env) else (nginx_servers | default([]))
+      }}
   ansible.builtin.template:
     src: nginx_upstreams.conf.j2
     dest: "{{ _pn }}/{{ item.profile_name }}/upstreams.conf"
@@ -237,8 +246,18 @@
   become_user: "{{ docker_user }}"
   vars:
     _pn: "{{ path_backend_config }}/NginxConfiguration"
-    _profile_env: "{{ cp_waf_agent_multi_envs | selectattr('profile_name', 'equalto', item.profile_name) | first | default({}) }}"
-    _nginx_limits_profile: "{{ _profile_env['nginx_limits'] if ('nginx_limits' in _profile_env) else (nginx_limits | default([])) }}"
+    _profile_env: >-
+      {{
+          cp_waf_agent_multi_envs |
+          selectattr('profile_name', 'equalto', item.profile_name)
+          | first | default({})
+      }}
+    _nginx_limits_profile: >-
+      {{
+         _profile_env['nginx_limits'] if
+         ('nginx_limits' in _profile_env)
+         else (nginx_limits | default([]))
+      }}
   ansible.builtin.template:
     src: nginx_limits.conf.j2
     dest: "{{ _pn }}/{{ item.profile_name }}/limits.conf"
@@ -299,7 +318,7 @@
     XDG_RUNTIME_DIR: "/run/user/{{ docker_user_info.uid }}"
     DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
     PATH: >
-      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
   community.docker.docker_compose_v2_pull:
     project_src: "{{ path_backend_config }}"
   loop: "{{ cp_waf_agent_multi_services }}"
