@@ -1,7 +1,7 @@
 ---
 description: Diffusion/Molecule testing specialist for running, validating, and troubleshooting Molecule test scenarios. Uses Diffusion MCP tools for test execution and diagnostics. Read-only access to role code.
 mode: subagent
-model: github-copilot/claude-sonnet-5
+model: yandex/deepseek-v4.1-flash
 permission:
   read: allow
   edit:

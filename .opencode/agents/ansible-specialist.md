@@ -1,7 +1,7 @@
 ---
 description: Ansible role specialist for writing, reviewing, and refactoring tasks, handlers, templates, variables, defaults, and meta files. Manages the Check Point WAF agent and Docker installation role following Ansible best practices.
 mode: subagent
-model: github-copilot/claude-sonnet-5
+model: yandex/deepseek-v4.1-flash
 permission:
   read: allow
   edit:
