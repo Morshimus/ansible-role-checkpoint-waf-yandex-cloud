@@ -5,7 +5,7 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 ## Requirements
 
 - Ubuntu Noble (24.04) or Debian
-- Ansible >= 2.1
+- Ansible >= 2.15
 - Collections: `community.general`, `community.docker`
 - Role dependency: `docker_rootless` (must be available in your roles path)
 - `jq` and `curl` on the target host (installed automatically in molecule runs)
@@ -21,7 +21,7 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 | `cp_waf_agent_authorization_token` | string | **required** | defaults/checkpoint_waf_agent_defaults.yml | Check Point WAF agent registration token (override with vault or secrets) |
 | `cp_waf_agent_cpu_limits` | string | *optional* | defaults/checkpoint_waf_agent_defaults.yml | CPU limits for the WAF agent container (e.g., "2.6") |
 | `cp_waf_agent_mem_limits` | string | *optional* | defaults/checkpoint_waf_agent_defaults.yml | Memory limits for the WAF agent container (e.g., "1GB") |
-| `cp_waf_agent_multi_envs` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of per-profile environment configurations with image family and certificate IDs |
+| `cp_waf_agent_multi_envs` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of per-profile environment configurations with image family, certificate IDs, and optional per-profile nginx_servers / nginx_limits (fall back to the global lists when omitted) |
 | `cp_waf_agent_multi_images` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of Docker image families with registry and image configuration per family |
 | `cp_waf_agent_multi_network` | dict | *optional* | defaults/checkpoint_waf_agent_defaults.yml | Docker bridge network configuration for multi-agent containers (subnet, gateway) |
 | `cp_waf_agent_multi_resources` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of per-profile Docker resource limits (CPU and memory) |
@@ -31,7 +31,7 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 | `docker_allow_ping` | bool | `false` | defaults/docker_defaults.yml | Allow Docker containers to ping |
 | `docker_allow_privileged_ports` | bool | `false` | defaults/docker_defaults.yml | Allow Docker to bind privileged ports (< 1024) |
 | `docker_compose` | bool | `true` | defaults/docker_defaults.yml | Enable Docker Compose installation |
-| `docker_cp_agent_image` | string | `"cloudguard-appsec-standalone:1580296"` | defaults/checkpoint_waf_agent_defaults.yml | Image name with tag. |
+| `docker_cp_agent_image` | string | `"cloudguard-appsec-standalone:1667003"` | defaults/checkpoint_waf_agent_defaults.yml | Image name with tag. |
 | `docker_daemon_json_template` | string | `daemon_no_snapshotter.json.j2` | defaults/docker_defaults.yml | Template for Docker daemon configuration |
 | `docker_full_image_path` | string | `{{{, docker_registry_url + "/" +, docker_registry_folder +, "/" + docker_cp_agent_image, }}}` | defaults/checkpoint_waf_agent_defaults.yml | Full docker image pull path. It could be resolved by docker_registry_folder, docker_cp_agent_image and docker_registry_url - as it's jinja2 shortage |
 | `docker_registry_folder` | string | `"checkpoint"` | defaults/checkpoint_waf_agent_defaults.yml | Docker registry folder name. |
@@ -42,22 +42,22 @@ Ansible role for installing and registering [Check Point CloudGuard AppSec](http
 | `docker_service_restart` | bool | `false` | defaults/docker_defaults.yml | Restart Docker service after configuration changes |
 | `docker_user` | string | `docker-adm` | defaults/docker_defaults.yml | Docker user for rootless Docker installation |
 | `docker_user_bashrc` | bool | `false` | defaults/docker_defaults.yml | Extend Docker user bashrc configuration |
-| `gaddr` | string | `"169.254.169.254"` | defaults/checkpoint_waf_agent_defaults.yml | Magic link accessable from VM instance. |
+| `gaddr` | string | `"169.254.169.254"` | defaults/checkpoint_waf_agent_defaults.yml | Magic link accessible from VM instance. |
 | `gpath` | string | `"computeMetadata/v1/instance/service-accounts"` | defaults/checkpoint_waf_agent_defaults.yml | Magic Link path to service account access token |
 | `iam_link` | string | `"http://{{ gaddr }}/{{ gpath }}/default/token"` | defaults/checkpoint_waf_agent_defaults.yml | Full iam link. It could be resolved by gaddr and gpath automatically - as it's jinja2 shortage |
-| `nginx_certs` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of certificate content pairs to copy directly into certs directory. nginx_certs and yc_certificates_ids mutually explicit. nginx_certs and yc_certificates_ids mutually explicit. |
+| `nginx_certs` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of certificate content pairs to copy directly into certs directory. nginx_certs and yc_certificates_ids are mutually exclusive. |
 | `nginx_limits` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of nginx limit definitions for rate limiting and connection limiting |
 | `nginx_servers` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of nginx virtual server configurations with SSL and proxy settings |
 | `path_backend_config` | string | `"/opt/CloudGuard/WAF"` | defaults/checkpoint_waf_agent_defaults.yml | Path to docker-compose and config files |
-| `path_cp_agent_waf_certs` | string | `"{{ path_backend_config }}/Certs"` | defaults/checkpoint_waf_agent_defaults.yml | Path where Checkpoint CloudGuard agent will storre Certificates. It could be resolved by path_backend_config automatically to Certs - as it's jinja2 shortage |
+| `path_cp_agent_waf_certs` | string | `"{{ path_backend_config }}/Certs"` | defaults/checkpoint_waf_agent_defaults.yml | Path where Checkpoint CloudGuard agent will store Certificates. It could be resolved by path_backend_config automatically to Certs - as it's jinja2 shortage |
 | `path_cp_agent_waf_configuration` | string | `"{{ path_backend_config }}/AgentConfiguration"` | defaults/checkpoint_waf_agent_defaults.yml | Path where Agent Configuration will be stored.It could be resolved by path_backend_config automatically to AgentConfiguration - as it's jinja2 shortage |
 | `path_cp_agent_waf_data` | string | `"{{ path_backend_config }}/Data"` | defaults/checkpoint_waf_agent_defaults.yml | Path where Checkpoint CloudGuard agent will store data. It could be resolved by path_backend_config automatically to Data - as it's jinja2 shortage |
 | `path_cp_agent_waf_logs` | string | `"{{ path_backend_config }}/Logs"` | defaults/checkpoint_waf_agent_defaults.yml | Path where Logs will be stored. It could be resolved by path_backend_config automatically to Logs - as it's jinja2 shortage |
 | `path_cp_nginx_configuration` | string | `"{{ path_backend_config }}/NginxConfiguration"` | defaults/checkpoint_waf_agent_defaults.yml | Path where Nginx Configuration will be stored. It could be resolved by path_backend_config automatically to NginxConfiguration - as it's jinja2 shortage |
 | `path_docker` | string | `/opt/Docker/root` | defaults/docker_defaults.yml | Docker installation directory |
 | `path_docker_root` | string | `/opt/Docker/root/lib` | defaults/docker_defaults.yml | Docker root library directory |
-| `use_yandex_container_registry` | bool | `false` | defaults/checkpoint_waf_agent_defaults.yml | Does it required to autentificate to Yandex Cloud registry by using Magic Link token of SA? |
-| `yandex_certificate_crawler_schedule` | string | *optional* | defaults/checkpoint_waf_agent_defaults.yml | Systemd timer schedule for certificate crawler (e.g., "*-*-* 03:00:00"). Deafult is ""*-*-* 19:00:00". |
+| `use_yandex_container_registry` | bool | `false` | defaults/checkpoint_waf_agent_defaults.yml | Does it required to authenticate to Yandex Cloud registry by using Magic Link token of SA? |
+| `yandex_certificate_crawler_schedule` | string | *optional* | defaults/checkpoint_waf_agent_defaults.yml | Systemd timer schedule for certificate crawler (e.g., "*-*-* 03:00:00"). Default is "*-*-* 19:00:00". |
 | `yandex_cloud_token` | string | `"fakekey"` | defaults/checkpoint_waf_agent_defaults.yml | Yandex Cloud static token. |
 | `yandex_cloud_token_static` | string | `"dummy-xxxx-xxxx-xxx"` | defaults/checkpoint_waf_agent_defaults.yml | Yandex Cloud static IAM token for testing (override with vault or secrets) |
 | `yc_certificates_ids` | list | *optional* | defaults/checkpoint_waf_agent_defaults.yml | List of Yandex Certificate Manager certificate IDs to fetch periodically |

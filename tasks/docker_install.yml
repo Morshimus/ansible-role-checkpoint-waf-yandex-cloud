@@ -38,7 +38,7 @@
   ansible.builtin.file:
     path: "{{ path_docker }}"
     state: directory
-    mode: "0777"
+    mode: "0750"
     owner: "{{ docker_user }}"
     group: "{{ docker_user }}"
 
@@ -75,7 +75,13 @@
     mode: "0745"
   when: not slices_service_d.stat.exists
 
-- name: Create Delegate configuation for users.
+- name: Check if user slice delegation file exists
+  become: true
+  ansible.builtin.stat:
+    path: /etc/systemd/system/user@.service.d/delegate.conf
+  register: delegate_conf
+
+- name: Create Delegate configuration for users.
   become: true
   ansible.builtin.copy:
     dest: /etc/systemd/system/user@.service.d/delegate.conf
@@ -83,9 +89,7 @@
     content: |
       [Service]
       Delegate=cpu cpuset io memory pids
-  when: not slices_service_d.stat.exists
-
-# TODO: Create mechanic which will check systemd for Ubuntu 22.04
+  when: not delegate_conf.stat.exists
 
 - name: Start and Enable Docker Service
   become: true
