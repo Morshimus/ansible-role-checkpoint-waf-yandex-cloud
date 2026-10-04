@@ -110,6 +110,13 @@
         cpu: "2.0"
         mem: "1GB"
   tasks:
+    - name: "Include Ansible role"
+      ansible.builtin.include_role:
+        name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
+      tags:
+        - docker
+        - checkpoint_waf_multi_agent
+
     - name: Generate per-profile self-signed certificates
       become: true
       become_user: "docker-adm"
@@ -123,10 +130,3 @@
       loop: "{{ cp_waf_agent_multi_envs }}"
       loop_control:
         label: "{{ item.profile_name }}"
-
-    - name: "Include Ansible role"
-      ansible.builtin.include_role:
-        name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
-      tags:
-        - docker
-        - checkpoint_waf_multi_agent
