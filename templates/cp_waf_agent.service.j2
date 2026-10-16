@@ -1,9 +1,9 @@
 
 [Unit]
 {% if checkpoint_waf_multi_agent is defined and checkpoint_waf_multi_agent -%}
-Description=Chekpoint WAF agent service with docker-compose for profile {{ _multi_profile }}
+Description=Checkpoint WAF agent service with docker-compose for profile {{ _multi_profile }}
 {% else -%}
-Description=Chekpoint WAF agent service with docker-compose
+Description=Checkpoint WAF agent service with docker-compose
 {% endif -%}
 StartLimitBurst=10
 StartLimitIntervalSec=90
@@ -12,7 +12,7 @@ StartLimitIntervalSec=90
 Delegate=cpu cpuset io memory pids
 Environment="XDG_RUNTIME_DIR=/run/user/{{ docker_user_info.uid }}"
 Environment="DOCKER_HOST=unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
-Environment="PATH=/home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH"
+Environment="PATH=/home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 {% if checkpoint_waf_multi_agent is defined and checkpoint_waf_multi_agent -%}
 Environment="COMPOSE_PROFILES={{ _multi_profile }}"
 {% endif -%}
@@ -22,10 +22,10 @@ Group={{ docker_user }}
 WorkingDirectory={{ path_backend_config }}
 
 # Compose up
-ExecStart=/home/{{ docker_user }}/.local/bin/docker compose  up --remove-orphans --force-recreate
+ExecStart=/home/{{ docker_user }}/.local/bin/docker compose up --remove-orphans --force-recreate
 
 # Compose down, remove containers
-ExecStop=/home/{{ docker_user }}/.local/bin/docker compose  down --volumes
+ExecStop=/home/{{ docker_user }}/.local/bin/docker compose down --volumes
 
 [Install]
 WantedBy=multi-user.target

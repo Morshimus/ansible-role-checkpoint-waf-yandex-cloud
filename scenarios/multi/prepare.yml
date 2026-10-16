@@ -4,13 +4,20 @@
   gather_facts: true
 
   tasks:
+    - name: Ensure openssl is installed for self-signed certificates
+      become: true
+      ansible.builtin.apt:
+        name: openssl
+        state: present
+        update_cache: true
+
     - name: Create user service folder
       ansible.builtin.file:
         path: /etc/systemd/system/user@.service.d
         state: directory
         mode: "0600"
 
-    - name: Create Delegate configuation for users.
+    - name: Create Delegate configuration for users.
       ansible.builtin.copy:
         dest: /etc/systemd/system/user@.service.d/delegate.conf
         mode: "0600"

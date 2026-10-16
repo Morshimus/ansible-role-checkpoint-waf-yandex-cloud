@@ -13,7 +13,7 @@ docker_registry_url: "docker.io"
 
 #-| string
 gaddr: "169.254.169.254"
-#-? Magic link accessable from VM instance.
+#-? Magic link accessible from VM instance.
 
 #-| string
 gpath: "computeMetadata/v1/instance/service-accounts"
@@ -29,7 +29,7 @@ path_cp_agent_waf_data: "{{ path_backend_config }}/Data"
 
 #-| string
 path_cp_agent_waf_certs: "{{ path_backend_config }}/Certs"
-#-? Path where Checkpoint CloudGuard agent will storre Certificates. It could be resolved by path_backend_config automatically to Certs - as it's jinja2 shortage
+#-? Path where Checkpoint CloudGuard agent will store Certificates. It could be resolved by path_backend_config automatically to Certs - as it's jinja2 shortage
 
 #-| string
 path_cp_agent_waf_configuration: "{{ path_backend_config }}/AgentConfiguration"
@@ -45,7 +45,7 @@ path_cp_agent_waf_logs: "{{ path_backend_config }}/Logs"
 
 #-| bool
 use_yandex_container_registry: false
-#-? Does it required to autentificate to Yandex Cloud registry by using Magic Link token of SA?
+#-? Does it required to authenticate to Yandex Cloud registry by using Magic Link token of SA?
 
 #-| string
 docker_registry_folder: "checkpoint"
@@ -85,7 +85,7 @@ docker_full_image_path: >-
 
 #-| list
 #-& nginx_certs
-#-? List of certificate content pairs to copy directly into certs directory. nginx_certs and yc_certificates_ids mutually explicit. nginx_certs and yc_certificates_ids mutually explicit.
+#-? List of certificate content pairs to copy directly into certs directory. nginx_certs and yc_certificates_ids are mutually exclusive.
 
 #-| list
 #-& yc_certificates_ids
@@ -93,7 +93,7 @@ docker_full_image_path: >-
 
 #-| string
 #-& yandex_certificate_crawler_schedule
-#-? Systemd timer schedule for certificate crawler (e.g., "*-*-* 03:00:00"). Deafult is ""*-*-* 19:00:00".
+#-? Systemd timer schedule for certificate crawler (e.g., "*-*-* 03:00:00"). Default is "*-*-* 19:00:00".
 
 # Multi-agent mode configuration
 
@@ -115,7 +115,7 @@ docker_full_image_path: >-
 
 #-| list
 #-& cp_waf_agent_multi_envs
-#-? List of per-profile environment configurations with image family and certificate IDs
+#-? List of per-profile environment configurations with image family, certificate IDs, and optional per-profile nginx_servers / nginx_limits (fall back to the global lists when omitted)
 
 #-| list
 #-& cp_waf_agent_multi_secrets

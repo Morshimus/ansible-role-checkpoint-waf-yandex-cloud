@@ -28,9 +28,75 @@
       - profile_name: profile1
         image_family: default
         yc_certificates_ids: []
+        nginx_limits:
+          - conn:
+              zone: "profile1_conn:5m"
+          - req:
+              zone: "profile1_req:5m"
+              rate: "30r/s"
+        nginx_servers:
+          - server_name: "profile1.example.com"
+            certificate_name: "profile1"
+            limits:
+              - type: "req"
+                zone: "profile1_req"
+                burst: "20"
+              - type: "conn"
+                zone: "profile1_conn"
+                requests: "1000"
+            client_body_timeout: "30s"
+            client_header_timeout: "30s"
+            ssl_stapling: "on"
+            ssl_stapling_verify: "on"
+            ssl_session_tickets: "off"
+            ssl_session_timeout: "6h"
+            ssl_protocols:
+              - "TLSv1.2"
+              - "TLSv1.3"
+            ssl_ciphers:
+              - "ECDHE-ECDSA-AES128-GCM-SHA256"
+              - "ECDHE-RSA-AES128-GCM-SHA256"
+            ssl_prefer_server_ciphers: "on"
+            locations:
+              - path: "/"
+                proxy_pass: "http://10.10.20.10:8080"
+                proxy_host: "profile1.example.com"
       - profile_name: profile2
         image_family: latest
         yc_certificates_ids: []
+        nginx_limits:
+          - req:
+              zone: "profile2_req:10m"
+              rate: "60r/s"
+        nginx_servers:
+          - server_name: "profile2.example.com"
+            certificate_name: "profile2"
+            limits:
+              - type: "req"
+                zone: "profile2_req"
+                burst: "40"
+            client_body_timeout: "60s"
+            client_header_timeout: "60s"
+            ssl_stapling: "off"
+            ssl_stapling_verify: "off"
+            ssl_session_tickets: "on"
+            ssl_session_timeout: "12h"
+            ssl_protocols:
+              - "TLSv1.3"
+            ssl_ciphers:
+              - "ECDHE-ECDSA-AES256-GCM-SHA384"
+              - "ECDHE-RSA-AES256-GCM-SHA384"
+            ssl_prefer_server_ciphers: "off"
+            locations:
+              - path: "/api"
+                proxy_pass: "http://10.10.20.20:9090"
+                proxy_host: "profile2.example.com"
+                proxy_header_strategy: "keep-alive"
+                ssl_forward: true
+                proxy_read_timeout: "120s"
+              - path: "/"
+                proxy_pass: "http://10.10.20.21:80"
+                proxy_host: "profile2.example.com"
     cp_waf_agent_multi_secrets:
       - profile_name: profile1
         secret: dummy-xxx-xxx-1
@@ -50,3 +116,17 @@
       tags:
         - docker
         - checkpoint_waf_multi_agent
+
+    - name: Generate per-profile self-signed certificates
+      become: true
+      become_user: "docker-adm"
+      ansible.builtin.command:
+        cmd: >-
+          openssl req -x509 -newkey rsa:2048 -nodes -days 3650
+          -keyout /opt/CloudGuard/WAF/Certs/{{ item.profile_name }}/{{ item.profile_name }}-key.pem
+          -out /opt/CloudGuard/WAF/Certs/{{ item.profile_name }}/{{ item.profile_name }}-crt.pem
+          -subj "/CN={{ item.profile_name }}_server"
+        creates: "/opt/CloudGuard/WAF/Certs/{{ item.profile_name }}/{{ item.profile_name }}-crt.pem"
+      loop: "{{ cp_waf_agent_multi_envs }}"
+      loop_control:
+        label: "{{ item.profile_name }}"

@@ -9,8 +9,10 @@ declare -a CERTIFICATE_IDS
 TARGET_FOLDER=${NULL:-}
 IAM_TOKEN=${NULL:-}
 IAM_LINK=${NULL:-"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"}
+CONTAINER_NAME=${NULL:-cp_waf_agent}
+DOCKER_BIN=${DOCKER_BIN:-"${HOME}/.local/bin/docker"}
 
-while getopts 'a:c:i:t:h' flag; do
+while getopts 'a:c:i:t:n:h' flag; do
   case "${flag}" in
   c)
     CERTIFICATE_IDS+=("${OPTARG}")
@@ -24,12 +26,16 @@ while getopts 'a:c:i:t:h' flag; do
   a)
     IAM_TOKEN=${OPTARG}
     ;;
+  n)
+    CONTAINER_NAME=${OPTARG}
+    ;;
   \? | h)
-    echo "Usage: [-c ] [-t] [-i] [-a]:
+    echo "Usage: [-c ] [-t] [-i] [-a] [-n]:
           -c is certificates ids;
-          -t is target folder where crtificated required to be updated.
+          -t is target folder where certificates are required to be updated.
           -i is iam link, if it's not required omit it.
-          -a is iam token, if not required omit it."
+          -a is iam token, if not required omit it.
+          -n is docker container name to restart, default cp_waf_agent."
     exit 1
     ;;
   esac
@@ -105,7 +111,7 @@ for i in "${!CERTIFICATE_IDS[@]}"; do
 done
 
 if [ "${REBOOT_CONTAINER}" -eq 1 ]; then
-  ~/bin/docker restart cp_waf_agent
+  "${DOCKER_BIN}" restart "${CONTAINER_NAME}"
 fi
 
 if [ ! -f "./yc_crawler_initialized" ]; then

@@ -10,7 +10,7 @@
         state: directory
         mode: "0600"
 
-    - name: Create Delegate configuation for users.
+    - name: Create Delegate configuration for users.
       ansible.builtin.copy:
         dest: /etc/systemd/system/user@.service.d/delegate.conf
         mode: "0600"

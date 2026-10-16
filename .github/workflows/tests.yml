@@ -20,7 +20,7 @@ jobs:
 
       - name: Add user for Docker sys fs emulation.
         run: |
-          sudo useradd docker-adm && sudo loginctl enable-linger 1000
+          sudo useradd docker-adm && sudo loginctl enable-linger docker-adm
 
       - name: Run Diffusion Tests for Scenario ${{ matrix.scenario }}
         uses: Polar-Team/diffusion/diffusion-test@main
