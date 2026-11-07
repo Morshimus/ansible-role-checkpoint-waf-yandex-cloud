@@ -2,7 +2,7 @@
   registry_server = "ghcr.io"
   registry_provider = "Public"
   molecule_container_name = "polar-team/diffusion-molecule-container"
-  molecule_container_tag = "latest-amd64"
+  molecule_container_tag = "latest"
 
 [vault]
   enabled = false
