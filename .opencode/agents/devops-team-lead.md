@@ -5,7 +5,15 @@ model: yandex/deepseek-v4.1-flash
 permission:
   edit: deny
   read: allow
-  webfetch: allow
+  webfetch:
+    "*": deny
+    "https://docs.checkpoint.com/*": allow
+    "https://sc1.checkpoint.com/*": allow
+    "https://cloud.yandex.com/*": allow
+    "https://yandex.cloud/*": allow
+    "https://docs.ansible.com/*": allow
+    "https://docs.docker.com/*": allow
+
   bash:
     "*": allow
 ---
