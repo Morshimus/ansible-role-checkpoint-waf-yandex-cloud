@@ -10,28 +10,7 @@ permission:
     "vars/*": allow
     "diffusion.toml": allow
   bash:
-    "*": ask
-    "diffusion molecule*": allow
-    "diffusion deps lock*": allow
-    "diffusion deps check*": allow
-    "diffusion deps sync*": allow
-    "diffusion deps resolve*": allow
-    "diffusion show*": allow
-    "diffusion --version": allow
-    "diffusion cache list*": allow
-    "diffusion cache status*": allow
-    "diffusion artifact list*": allow
-    "diffusion docs*": allow
-    "docker ps*": allow
-    "docker images*": allow
-    "docker inspect*": allow
-    "docker logs*": allow
-    "docker exec*": allow
-    "git status*": allow
-    "git log --oneline*": allow
-    "git branch*": allow
-    "git diff --name-only*": allow
-    "git diff --stat*": allow
+    "*": allow
 ---
 
 You are a Diffusion testing specialist. Your job is to run, validate, and troubleshoot Molecule test scenarios for Ansible roles using the Diffusion MCP tools and Diffusion CLI.

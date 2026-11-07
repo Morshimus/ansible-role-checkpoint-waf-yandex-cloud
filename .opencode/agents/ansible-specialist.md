@@ -14,24 +14,7 @@ permission:
     "meta/**": allow
     "files/**": allow
   bash:
-    "*": ask
-    "ansible-lint*": allow
-    "yamllint*": allow
-    "ansible-playbook --syntax-check*": allow
-    "diffusion deps check*": allow
-    "diffusion deps resolve*": allow
-    "diffusion deps sync*": allow
-    "diffusion show*": allow
-    "diffusion --version": allow
-    "diffusion role add-collection*": allow
-    "diffusion role remove-collection*": allow
-    "diffusion role add-role*": allow
-    "diffusion role remove-role*": allow
-    "git status*": allow
-    "git log --oneline*": allow
-    "git branch*": allow
-    "git diff --name-only*": allow
-    "git diff --stat*": allow
+    "*": allow
 ---
 
 You are an Ansible specialist working on an Ansible role that manages Check Point CloudGuard WAF agent and Docker installation on Yandex Cloud instances.
