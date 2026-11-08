@@ -8,7 +8,7 @@ yandex_cloud_token: "fakekey"
 #-? Yandex Cloud static token.
 
 #-| string
-docker_registry_url: "docker.io"
+docker_registry_url: "ghcr.io"
 #-? Docker registry name
 
 #-| string
@@ -48,11 +48,11 @@ use_yandex_container_registry: false
 #-? Does it required to autentificate to Yandex Cloud registry by using Magic Link token of SA?
 
 #-| string
-docker_registry_folder: "checkpoint"
+docker_registry_folder: "openappsec"
 #-? Docker registry folder name.
 
 #-| string
-docker_cp_agent_image: "cloudguard-appsec-standalone:1667003"
+docker_cp_agent_image: "ghcr.io/openappsec/agent-unified-premium:1.1.36"
 #-? Image name with tag.
 
 #-| string

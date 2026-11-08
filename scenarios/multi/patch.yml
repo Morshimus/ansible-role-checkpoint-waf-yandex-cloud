@@ -1,0 +1,8 @@
+Bundles:
+  - patch_bundle_name: Mode Setup skipping.
+    role_name: docker_rootless
+    tasks_to_patch:
+      - task_id: 1.3.9
+        new_conditions:
+          - condition: when
+            body: molecule_yml is not defined
