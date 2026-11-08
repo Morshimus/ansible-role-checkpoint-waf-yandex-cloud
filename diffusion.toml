@@ -69,7 +69,7 @@
     Namespace = "konstruktoid"
     Src = "https://github.com/konstruktoid/ansible-role-docker-rootless.git"
     Scm = "git"
-    Version = "<2.5.0"
+    Version = ">=1.13.0"
 
   [[dependencies.collections]]
     Name = "multi.general"
@@ -91,4 +91,4 @@
     Namespace = "konstruktoid"
     Src = "https://github.com/konstruktoid/ansible-role-docker-rootless.git"
     Scm = "git"
-    Version = "<2.5.0"
+    Version = ">=1.13.0"
