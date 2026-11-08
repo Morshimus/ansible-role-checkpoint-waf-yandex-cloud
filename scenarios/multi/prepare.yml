@@ -37,6 +37,7 @@
       args:
         executable: /bin/sh
       changed_when: false
+      when: orb_stack_execution | default(false)
 
     - name: Ensure user-1000.slice exists and delegates cpu memory pids
       ansible.builtin.shell: |
@@ -55,6 +56,7 @@
       args:
         executable: /bin/sh
       changed_when: false
+      when: orb_stack_execution | default(false)
 
     - name: Remove default ubuntu user MOLECULE
       when:
