@@ -9,7 +9,7 @@ yandex_cloud_token: "fakekey"
 
 #-| string
 docker_registry_url: "ghcr.io"
-#-? Docker registry name
+#-? Docker registry name. For CloudGuard WAF it will be "docker.io"
 
 #-| string
 gaddr: "169.254.169.254"
@@ -49,11 +49,11 @@ use_yandex_container_registry: false
 
 #-| string
 docker_registry_folder: "openappsec"
-#-? Docker registry folder name.
+#-? Docker registry folder name. For CloudGuard WAF it will be "checkpoint".
 
 #-| string
-docker_cp_agent_image: "ghcr.io/openappsec/agent-unified-premium:1.1.36"
-#-? Image name with tag.
+docker_cp_agent_image: "agent-unified-premium:1.1.36"
+#-? Image name with tag. For CloudGuard WAF it will be "cloudguard-appsec-standalone:1667003"
 
 #-| string
 docker_full_image_path: >-

@@ -61,6 +61,7 @@ x-cp-waf-agent-image: &cp_waf_agent_IMG "${CP_WAF_AGENT_IMG:-docker.io/checkpoin
 
 x-env-cp-waf-agent: &cp_waf_agent_ENV
   CP_WAF_AGENT_TOKEN: "/run/secrets/cp_waf_agent_authorization_token"
+  CP_WAF_AGENT_TYPE: ${CP_WAF_AGENT_TYPE:-openappsec}
 
 # ###Secrets Options#####
 
