@@ -22,6 +22,40 @@
       ansible.builtin.systemd_service:
         daemon_reload: true
 
+    - name: Ensure user.slice delegates cpu memory pids
+      ansible.builtin.shell: |
+        control=/sys/fs/cgroup/user.slice/cgroup.subtree_control
+        if [ ! -e "${control}" ]; then
+          echo "WARNING: ${control} does not exist, skipping" >&2
+          exit 0
+        fi
+        for controller in cpu memory pids; do
+          if ! grep -qw "${controller}" "${control}"; then
+            echo "+${controller}" > "${control}"
+          fi
+        done
+      args:
+        executable: /bin/sh
+      changed_when: false
+
+    - name: Ensure user-1000.slice exists and delegates cpu memory pids
+      ansible.builtin.shell: |
+        slice=user-1000.slice
+        systemctl start "${slice}" || true
+        control=/sys/fs/cgroup/${slice}/cgroup.subtree_control
+        if [ ! -e "${control}" ]; then
+          echo "WARNING: ${control} does not exist, skipping" >&2
+          exit 0
+        fi
+        for controller in cpu memory pids; do
+          if ! grep -qw "${controller}" "${control}"; then
+            echo "+${controller}" > "${control}"
+          fi
+        done
+      args:
+        executable: /bin/sh
+      changed_when: false
+
     - name: Remove default ubuntu user MOLECULE
       when:
         - molecule_yml is defined
