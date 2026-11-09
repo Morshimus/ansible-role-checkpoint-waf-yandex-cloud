@@ -18,9 +18,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # - name: Add user for Docker sys fs emulation.
-      #   run: |
-      #     sudo useradd docker-adm && sudo loginctl enable-linger 1000
+      - name: Add user for Docker sys fs emulation.
+        run: |
+          cat /etc/passwd && \
+          sudo useradd docker-adm && sudo loginctl enable-linger 1000
 
       - name: Run Diffusion Tests for Scenario ${{ matrix.scenario }}
         uses: Polar-Team/diffusion/diffusion-test@main
