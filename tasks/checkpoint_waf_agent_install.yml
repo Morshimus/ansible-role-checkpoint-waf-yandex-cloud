@@ -361,7 +361,7 @@
     DOCKER_HOST: "unix:///run/user/{{ docker_user_info.uid }}/docker.sock"
     PATH: >
       /home/{{ docker_user }}/bin:/home/{{ docker_user }}/.local/bin:$PATH
-  ansible.builtin.debug:
+  ansible.builtin.command:
     cmd: systemctl --user status docker.service
   register: systemd_docker_service
 
